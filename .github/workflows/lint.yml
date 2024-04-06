@@ -4,7 +4,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
       - name: Move to frontend
         run: cd frontend
       - name: Install modules
