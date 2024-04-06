@@ -1,15 +1,21 @@
 [project]
-name = "resume"
-version = "0.1.0"
-description = "Add a short description here"
 authors = ["shughes.uk <shughes.uk@gmail.com>"]
 channels = ["conda-forge"]
+description = "Add a short description here"
+name = "resume"
 platforms = ["osx-arm64"]
+version = "0.1.0"
 
 [tasks]
+barf = { cmd = ["cd frontend && pnpm install"] }
+frontend-build = { cmd = "pnpm build", cwd = "frontend" }
+frontend-dev = { cmd = "pnpm dev", cwd = "frontend" }
+frontend-format = { cmd = "pnpm eslint", cwd = "frontend" }
+frontend-lint = { cmd = "pnpm eslint", cwd = "frontend" }
+
 
 [dependencies]
-python = ">=3.12.2,<3.13"
 git = ">=2.44.0,<2.45"
 nodejs = ">=20.9.0,<20.10"
 pnpm = ">=8.15.6,<8.16"
+python = ">=3.12.2,<3.13"
