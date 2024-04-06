@@ -1,0 +1,13 @@
+name: CI
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Move to frontend
+        run: cd frontend
+      - name: Install modules
+        run: pnpm install
+      - name: Run ESLint
+        run: eslint . --ext .js,.jsx,.ts,.tsx
