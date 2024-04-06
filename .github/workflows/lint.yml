@@ -6,6 +6,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v3
+        with:
+          run_install:
+            cwd: frontend
       - name: Move to frontend
         run: cd frontend
       - name: Install modules
