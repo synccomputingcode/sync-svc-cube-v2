@@ -8,46 +8,35 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { CopyAll, GitHub, LinkedIn } from "@mui/icons-material";
-import { useCopyToClipboard } from "usehooks-ts";
-import { useSnackbar } from "notistack";
+import { GitHub, LinkedIn } from "@mui/icons-material";
+import { CopyButton } from "./components/CopyButton";
 
 function App() {
-  const [, copy] = useCopyToClipboard();
-  const { enqueueSnackbar } = useSnackbar();
-  const handleCopy = (text: string) => {
-    copy(text);
-    enqueueSnackbar("Copied to clipboard", { variant: "success" });
-  };
   return (
     <div>
       <Container maxWidth={"sm"}>
         <Typography variant="h2" align="center" gutterBottom>
           Samantha Hughes
         </Typography>
-        <Table>
+        <Table size="small">
           <TableRow>
             <TableCell>Email:</TableCell>
             <TableCell>
-              <Link href="mailto:shughes.uk@gmail.com">
-                shughes.uk@gmail.com
-              </Link>
-            </TableCell>
-            <TableCell>
-              <Button onClick={() => handleCopy("shughes.uk@gmail.com")}>
-                <CopyAll />
-              </Button>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Link href="mailto:shughes.uk@gmail.com">
+                  shughes.uk@gmail.com
+                </Link>
+                <CopyButton text="shughes.uk@gmail.com" />
+              </Stack>
             </TableCell>
           </TableRow>
           <TableRow>
             <TableCell>Phone:</TableCell>
             <TableCell>
-              <Link href="tel:+15129099300">+1-512-909-9300</Link>
-            </TableCell>
-            <TableCell>
-              <Button onClick={() => handleCopy("+1-512-909-9300")}>
-                <CopyAll />
-              </Button>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Link href="tel:+15129099300">+1-512-909-9300</Link>
+                <CopyButton text="+1-512-909-9300" />
+              </Stack>
             </TableCell>
           </TableRow>
           <TableRow>
@@ -75,6 +64,7 @@ function App() {
             <TableCell>
               <Button
                 component={Link}
+                size="small"
                 variant="contained"
                 href="https://calendly.com/shughes-uk/30min"
                 target="_blank"
