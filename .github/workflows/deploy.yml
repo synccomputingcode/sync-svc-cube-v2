@@ -3,11 +3,13 @@ on:
   push:
     branches:
       - main
-permissions:
-  id-token: write
-  contents: read
 jobs:
-  build:
+  deployment:
+    environment: production
+    concurrency: production
+    permissions:
+      id-token: write
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
