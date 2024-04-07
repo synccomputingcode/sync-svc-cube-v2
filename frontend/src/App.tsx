@@ -73,13 +73,15 @@ function App() {
           </TableRow>
           <TableRow>
             <TableCell>
-              <Link
+              <Button
+                component={Link}
+                variant="contained"
                 href="https://calendly.com/shughes-uk/30min"
                 target="_blank"
                 rel="noreferrer"
               >
                 Schedule a call
-              </Link>
+              </Button>
             </TableCell>
           </TableRow>
         </Table>
