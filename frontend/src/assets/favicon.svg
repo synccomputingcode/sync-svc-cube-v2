@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <style>
+    .pancake1 { fill: #EEDBC2;   }
+    .pancake2 { fill: #42BBEC;  }
+    .pancake3 { fill: #E0C35C; }
+    .pancake4 { fill: #9A3887; }
+    .text { font: bold 18px sans-serif; fill: #FFFFFF; }
+  </style>
+
+  <rect class="pancake1" x="20" y="20" width="60" height="12" rx="2" ry="2" />
+  <rect class="pancake2" x="25" y="36" width="50" height="12" rx="2" ry="2" />
+  <rect class="pancake3" x="30" y="52" width="40" height="12" rx="2" ry="2" />
+  <rect class="pancake4" x="35" y="68" width="30" height="12" rx="2" ry="2" />
+
+  <text class="text" x="50%" y="92%" text-anchor="middle" dominant-baseline="middle">
+    Fullstack
+  </text>
+</svg>
