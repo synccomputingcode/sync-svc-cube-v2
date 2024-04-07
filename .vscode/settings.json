@@ -23,4 +23,7 @@
             "source.fixAll": "explicit"
         },
     },
+    "[ignore]": {
+        "editor.defaultFormatter": "foxundermoon.shell-format"
+    },
 }
