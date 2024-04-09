@@ -77,6 +77,6 @@ jobs:
           auto_approve: true
           workspace: resume-workspace
           variables: |
-            app_image = "shughesuk/backend:${{ steps.deploy-backend.outputs.sha }}"
+            app_image = "shughesuk/backend:${{ needs.deploy-backend.outputs.sha }}"
         env:
           TERRAFORM_CLOUD_TOKENS: app.terraform.io=${{ secrets.TF_API_TOKEN }}
