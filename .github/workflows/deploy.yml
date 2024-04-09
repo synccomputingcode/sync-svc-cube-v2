@@ -8,6 +8,8 @@ env:
   CONFIG_DIRECTORY: "./"
 jobs:
   deploy-backend:
+    outputs:
+      sha: ${{ steps.short_sha.outputs.sha }}
     environment: backend-production
     concurrency: backend-production
     permissions:
