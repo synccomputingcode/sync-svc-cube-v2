@@ -23,16 +23,12 @@ export function LoginView(): React.ReactElement {
       sx={{
         backgroundImage:
           "linear-gradient(to right top, rgb(56, 67, 139), rgb(148, 75, 148), rgb(215, 90, 136), rgb(255, 126, 113), rgb(255, 178, 95), rgb(255, 235, 104))",
-        height: "100%",
-        position: "fixed",
-        bottom: "0",
-        right: "0",
-        left: "0",
+        minHeight: "100dvh",
       }}
     >
       <Grid2
         container
-        sx={{ paddingTop: "120px" }}
+        sx={{ paddingTop: { xs: "50px", sm: "120px" } }}
         spacing={2}
         justifyContent={"center"}
         alignItems={"center"}
@@ -40,7 +36,13 @@ export function LoginView(): React.ReactElement {
         <Grid2 md={6} sx={{ minWidth: "fit-content" }}>
           <Typography
             variant={"h1"}
-            sx={{ fontWeight: "600" }}
+            sx={{
+              fontWeight: "600",
+              fontSize: (theme) => ({
+                xs: "2rem",
+                md: theme.typography.h1.fontSize,
+              }),
+            }}
             color="primary.contrastText"
           >
             Samantha Hughes
@@ -48,7 +50,13 @@ export function LoginView(): React.ReactElement {
           <Typography
             variant="h2"
             color="primary.contrastText"
-            sx={{ whiteSpace: "nowrap" }}
+            sx={{
+              whiteSpace: "nowrap",
+              fontSize: (theme) => ({
+                xs: "1.5rem",
+                md: theme.typography.h2.fontSize,
+              }),
+            }}
           >
             Full Stack Engineer
           </Typography>
