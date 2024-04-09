@@ -44,7 +44,7 @@ locals {
   container_definitions = jsonencode([
     {
       name      = "backend-api"
-      image     = var.app_image
+      image     = "${var.app_image}"
       cpu       = 256
       memory    = 512
       essential = true
