@@ -4,7 +4,7 @@ module "resume_cdn" {
   version             = "3.4.0"
   is_ipv6_enabled     = true
   comment             = "Cloudfront distribution for coiled static assets."
-  default_root_object = "index.html"
+  default_root_object = "/index.html"
   price_class         = "PriceClass_100"
 
   create_origin_access_control = true
