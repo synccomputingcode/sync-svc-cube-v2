@@ -28,7 +28,7 @@ export function LoginView(): React.ReactElement {
     >
       <Grid2
         container
-        sx={{ paddingTop: { xs: "50px", sm: "120px" } }}
+        sx={{ paddingTop: { xs: "50px", sm: "120px" }, margin: 0 }}
         spacing={2}
         justifyContent={"center"}
         alignItems={"center"}
