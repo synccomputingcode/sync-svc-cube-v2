@@ -60,7 +60,7 @@ locals {
 }
 resource "aws_ecs_task_definition" "main" {
   family                   = "production"
-  container_definitions    = file("${path.module}/container_definitions.json")
+  container_definitions    = local.container_definitions
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   task_role_arn            = aws_iam_role.ecs_task_execution_role.arn
   network_mode             = "awsvpc"
