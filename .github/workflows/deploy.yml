@@ -32,7 +32,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: shughes/backend:${{ steps.short_sha.outputs.sha }}
+          tags: shughesuk/backend:${{ steps.short_sha.outputs.sha }}
   deploy-frontend:
     environment: frontend-production
     concurrency: frontend-production
