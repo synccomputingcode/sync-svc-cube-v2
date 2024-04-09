@@ -31,6 +31,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./backend
+          file: ./backend/Dockerfile
           push: true
           tags: shughes/backend:${{ steps.short_sha.outputs.sha }}
   deploy-frontend:
