@@ -40,7 +40,7 @@ module "resume_cdn" {
 
   custom_error_response = [{
     response_code      = 200
-    response_page_path = "index.html"
+    response_page_path = "/index.html"
     error_code         = 404
   }]
 

@@ -51,20 +51,40 @@ locals {
       portMappings = [
         {
           containerPort = 8000,
-          hostPort      = 80,
+          hostPort      = 8000,
           protocol      = "tcp",
         },
       ]
     },
   ])
 }
+
 resource "aws_ecs_task_definition" "main" {
   family                   = "production"
   container_definitions    = local.container_definitions
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
-  task_role_arn            = aws_iam_role.ecs_task_execution_role.arn
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = "256"
   memory                   = "512"
+}
+
+resource "aws_ecs_service" "main" {
+  name            = "production"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.main.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = module.vpc.public_subnets
+    security_groups  = [aws_security_group.ecs_service.id]
+    assign_public_ip = true
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.main.arn
+    container_name   = "backend-api"
+    container_port   = 8000
+  }
 }
