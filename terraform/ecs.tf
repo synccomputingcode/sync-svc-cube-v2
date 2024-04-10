@@ -156,6 +156,6 @@ resource "aws_ecs_service" "main" {
   load_balancer {
     target_group_arn = aws_lb_target_group.main.arn
     container_name   = "backend-api"
-    container_port   = 8000
+    container_port   = 80
   }
 }
