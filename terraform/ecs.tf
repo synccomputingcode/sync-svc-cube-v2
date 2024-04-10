@@ -61,6 +61,10 @@ resource "aws_secretsmanager_secret" "django_secret_key" {
 resource "aws_secretsmanager_secret_version" "django_secret_key" {
   secret_id     = aws_secretsmanager_secret.django_secret_key.id
   secret_string = data.aws_secretsmanager_random_password.django_secret_key.random_password
+
+  lifecycle {
+    ignore_changes = [secret_string]
+  }
 }
 
 data "aws_secretsmanager_random_password" "django_secret_key" {
@@ -88,8 +92,8 @@ locals {
       }
       portMappings = [
         {
-          containerPort = 8000,
-          hostPort      = 8000,
+          containerPort = 80,
+          hostPort      = 80,
           protocol      = "tcp",
         },
       ],

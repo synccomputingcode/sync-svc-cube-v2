@@ -13,6 +13,10 @@ resource "aws_lb_target_group" "main" {
   protocol    = "HTTP"
   vpc_id      = module.vpc.vpc_id
   target_type = "ip"
+
+  health_check {
+    path = "/api/healthcheck"
+  }
 }
 
 resource "aws_lb_listener" "main" {
