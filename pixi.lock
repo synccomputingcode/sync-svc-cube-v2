@@ -101,7 +101,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/c4/f1/468b49cccba3b42dda571063a14c668bb0b53a1d5712426d18e36663bd53/django_environ-0.11.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/4d/5d/e52a5a31c178418e626101b934ce30598dc0977483d8189e6d16af8aefdd/django_ninja-1.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/95/04/ff642e65ad6b90db43e668d70ffb6736436c7ce41fcc549f4e9472234127/h11-0.14.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/c9/5e/dc6acaf46d78979d6b03458b7a1618a68e152a6776fce95daac5e0f0301b/psycopg2-2.9.9.tar.gz
+      - pypi: https://files.pythonhosted.org/packages/ce/85/62825cabc6aad53104b7b6d12eb2ad74737d268630032d07b74d4444cb72/psycopg2_binary-2.9.9-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/e5/f3/8296f550276194a58c5500d55b19a27ae0a5a3a51ffef66710c58544b32d/pydantic-2.6.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/18/0e/1e39cfbffa57e92ab9f1f0869b32ead8a48ab11e4a373421d625f25fcb26/pydantic_core-2.16.3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/6a/3e/b68c118422ec867fa7ab88444e1274aa40681c606d59ac27de5a5588f082/python_dotenv-1.0.1-py3-none-any.whl
@@ -211,7 +211,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/c4/f1/468b49cccba3b42dda571063a14c668bb0b53a1d5712426d18e36663bd53/django_environ-0.11.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/4d/5d/e52a5a31c178418e626101b934ce30598dc0977483d8189e6d16af8aefdd/django_ninja-1.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/95/04/ff642e65ad6b90db43e668d70ffb6736436c7ce41fcc549f4e9472234127/h11-0.14.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/c9/5e/dc6acaf46d78979d6b03458b7a1618a68e152a6776fce95daac5e0f0301b/psycopg2-2.9.9.tar.gz
+      - pypi: https://files.pythonhosted.org/packages/81/0b/3adf561107c865928455891156d1dde5325253f7f4316fe56cd2c3f73570/psycopg2_binary-2.9.9-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
       - pypi: https://files.pythonhosted.org/packages/e5/f3/8296f550276194a58c5500d55b19a27ae0a5a3a51ffef66710c58544b32d/pydantic-2.6.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d7/ce/666885ab07e5184825b081095071297057b77c9dccd62616bf5b85a26365/pydantic_core-2.16.3-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
       - pypi: https://files.pythonhosted.org/packages/6a/3e/b68c118422ec867fa7ab88444e1274aa40681c606d59ac27de5a5588f082/python_dotenv-1.0.1-py3-none-any.whl
@@ -307,7 +307,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/c4/f1/468b49cccba3b42dda571063a14c668bb0b53a1d5712426d18e36663bd53/django_environ-0.11.2-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/4d/5d/e52a5a31c178418e626101b934ce30598dc0977483d8189e6d16af8aefdd/django_ninja-1.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/95/04/ff642e65ad6b90db43e668d70ffb6736436c7ce41fcc549f4e9472234127/h11-0.14.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/c9/5e/dc6acaf46d78979d6b03458b7a1618a68e152a6776fce95daac5e0f0301b/psycopg2-2.9.9.tar.gz
+      - pypi: https://files.pythonhosted.org/packages/7a/1f/a6cf0cdf944253f7c45d90fbc876cc8bed5cc9942349306245715c0d88d6/psycopg2_binary-2.9.9-cp311-cp311-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/e5/f3/8296f550276194a58c5500d55b19a27ae0a5a3a51ffef66710c58544b32d/pydantic-2.6.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ff/c7/e14e6ce2fe221d1046a7cc190b26b2bde2b1076d901154cdb8c20d88e6e0/pydantic_core-2.16.3-cp311-cp311-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/6a/3e/b68c118422ec867fa7ab88444e1274aa40681c606d59ac27de5a5588f082/python_dotenv-1.0.1-py3-none-any.whl
@@ -3093,10 +3093,22 @@ packages:
   size: 6402
   timestamp: 1677601110741
 - kind: pypi
-  name: psycopg2
+  name: psycopg2-binary
   version: 2.9.9
-  url: https://files.pythonhosted.org/packages/c9/5e/dc6acaf46d78979d6b03458b7a1618a68e152a6776fce95daac5e0f0301b/psycopg2-2.9.9.tar.gz
-  sha256: d1454bde93fb1e224166811694d600e746430c006fbb031ea06ecc2ea41bf156
+  url: https://files.pythonhosted.org/packages/7a/1f/a6cf0cdf944253f7c45d90fbc876cc8bed5cc9942349306245715c0d88d6/psycopg2_binary-2.9.9-cp311-cp311-macosx_11_0_arm64.whl
+  sha256: 1ea665f8ce695bcc37a90ee52de7a7980be5161375d42a0b6c6abedbf0d81f0f
+  requires_python: '>=3.7'
+- kind: pypi
+  name: psycopg2-binary
+  version: 2.9.9
+  url: https://files.pythonhosted.org/packages/ce/85/62825cabc6aad53104b7b6d12eb2ad74737d268630032d07b74d4444cb72/psycopg2_binary-2.9.9-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+  sha256: 977646e05232579d2e7b9c59e21dbe5261f403a88417f6a6512e70d3f8a046be
+  requires_python: '>=3.7'
+- kind: pypi
+  name: psycopg2-binary
+  version: 2.9.9
+  url: https://files.pythonhosted.org/packages/81/0b/3adf561107c865928455891156d1dde5325253f7f4316fe56cd2c3f73570/psycopg2_binary-2.9.9-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
+  sha256: 143072318f793f53819048fdfe30c321890af0c3ec7cb1dfc9cc87aa88241de2
   requires_python: '>=3.7'
 - kind: conda
   name: pycparser
