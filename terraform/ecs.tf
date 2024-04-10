@@ -19,6 +19,12 @@ resource "aws_ecs_cluster_capacity_providers" "fargate" {
   }
 }
 
+data "aws_iam_policy_document" "ecs_task_execution_role" {
+  statement {
+    actions   = ["secretsmanager:GetSecretValue"]
+    resources = [aws_db_instance.main.master_user_secret.0.secret_arn]
+  }
+}
 resource "aws_iam_role" "ecs_task_execution_role" {
   name = "ecs_task_execution_role"
 
@@ -34,6 +40,10 @@ resource "aws_iam_role" "ecs_task_execution_role" {
       },
     ],
   })
+  inline_policy {
+    name   = "ecs_task_execution_role_get_secret"
+    policy = data.aws_iam_policy_document.ecs_task_execution_role.json
+  }
 
   managed_policy_arns = [
     "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
@@ -51,7 +61,7 @@ locals {
       logConfiguration = {
         "logDriver" : "awslogs",
         "options" : {
-          "awslogs-group" : "/ecs/resume-backend/production",
+          "awslogs-group" : aws_cloudwatch_log_group.main.name,
           "awslogs-region" : "us-east-1",
           "awslogs-stream-prefix" : "ecs"
         }
@@ -70,7 +80,7 @@ locals {
         },
         {
           name  = "DB_PORT"
-          value = aws_db_instance.main.port
+          value = tostring(aws_db_instance.main.port)
         },
         {
           name  = "DB_NAME"
@@ -84,7 +94,7 @@ locals {
       secrets = [
         {
           name      = "DB_PASSWORD"
-          valueFrom = aws_db_instance.main.master_user_secret.0.secret_arn
+          valueFrom = "${aws_db_instance.main.master_user_secret.0.secret_arn}:password::"
         },
       ]
     },
