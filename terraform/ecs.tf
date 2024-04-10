@@ -48,11 +48,43 @@ locals {
       cpu       = 256
       memory    = 512
       essential = true
+      logConfiguration = {
+        "logDriver" : "awslogs",
+        "options" : {
+          "awslogs-group" : "/ecs/resume-backend/production",
+          "awslogs-region" : "us-east-1",
+          "awslogs-stream-prefix" : "ecs"
+        }
+      }
       portMappings = [
         {
           containerPort = 8000,
           hostPort      = 8000,
           protocol      = "tcp",
+        },
+      ],
+      environment = [
+        {
+          name  = "DB_HOST"
+          value = aws_db_instance.main.endpoint
+        },
+        {
+          name  = "DB_PORT"
+          value = aws_db_instance.main.port
+        },
+        {
+          name  = "DB_NAME"
+          value = aws_db_instance.main.db_name
+        },
+        {
+          name  = "DB_USER"
+          value = aws_db_instance.main.username
+        },
+      ],
+      secrets = [
+        {
+          name      = "DB_PASSWORD"
+          valueFrom = aws_db_instance.main.master_user_secret.0.secret_arn
         },
       ]
     },
