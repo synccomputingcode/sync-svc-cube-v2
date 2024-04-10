@@ -45,7 +45,7 @@ DEBUG = env.bool("DEBUG", default=False)
 if (ENV_NAME == "production") and DEBUG:
     raise ValueError("You can't enable DEBUG in production environment")
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
