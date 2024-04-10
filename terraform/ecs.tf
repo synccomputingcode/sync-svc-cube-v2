@@ -21,8 +21,11 @@ resource "aws_ecs_cluster_capacity_providers" "fargate" {
 
 data "aws_iam_policy_document" "ecs_task_execution_role" {
   statement {
-    actions   = ["secretsmanager:GetSecretValue"]
-    resources = [aws_db_instance.main.master_user_secret.0.secret_arn]
+    actions = ["secretsmanager:GetSecretValue"]
+    resources = [
+      aws_db_instance.main.master_user_secret.0.secret_arn,
+      aws_secretsmanager_secret.django_secret_key.arn
+    ]
   }
 }
 resource "aws_iam_role" "ecs_task_execution_role" {
@@ -40,6 +43,7 @@ resource "aws_iam_role" "ecs_task_execution_role" {
       },
     ],
   })
+
   inline_policy {
     name   = "ecs_task_execution_role_get_secret"
     policy = data.aws_iam_policy_document.ecs_task_execution_role.json
@@ -49,6 +53,22 @@ resource "aws_iam_role" "ecs_task_execution_role" {
     "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
   ]
 }
+
+resource "aws_secretsmanager_secret" "django_secret_key" {
+  name = "production-django-secret-key"
+}
+
+resource "aws_secretsmanager_secret_version" "django_secret_key" {
+  secret_id     = aws_secretsmanager_secret.django_secret_key.id
+  secret_string = data.aws_secretsmanager_random_password.django_secret_key.random_password
+}
+
+data "aws_secretsmanager_random_password" "django_secret_key" {
+  password_length     = 50
+  include_space       = false
+  exclude_punctuation = true
+}
+
 
 locals {
   container_definitions = jsonencode([
@@ -95,6 +115,10 @@ locals {
         {
           name      = "DB_PASSWORD"
           valueFrom = "${aws_db_instance.main.master_user_secret.0.secret_arn}:password::"
+        },
+        {
+          name      = "SECRET_KEY"
+          valueFrom = aws_secretsmanager_secret.django_secret_key.arn
         },
       ]
     },
