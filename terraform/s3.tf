@@ -3,14 +3,26 @@ module "resume_s3_bucket" {
 
   bucket        = "shughes-resume-frontend-bucket"
   force_destroy = true
+  cors_rule = [{
+    allowed_headers = ["*"]
+    allowed_methods = ["GET"]
+    allowed_origins = [local.domain_name]
+    expose_headers  = []
+  }]
 }
 
 data "aws_iam_policy_document" "s3_policy" {
 
   # Origin Access Controls
   statement {
-    actions   = ["s3:GetObject"]
-    resources = ["${module.resume_s3_bucket.s3_bucket_arn}/*"]
+    actions = [
+      "s3:GetObject",
+      "s3:ListBucket"
+    ]
+    resources = [
+      "${module.resume_s3_bucket.s3_bucket_arn}/*",
+      module.resume_s3_bucket.s3_bucket_arn
+    ]
 
     principals {
       type        = "Service"
