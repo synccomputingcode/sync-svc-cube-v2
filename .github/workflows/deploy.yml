@@ -37,8 +37,27 @@ jobs:
           context: .
           push: true
           tags: shughesuk/backend:${{ steps.short_sha.outputs.sha }}
-  deploy-frontend:
+  terraform:
     needs: deploy-backend
+    name: "Terraform Apply"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: terraform-apply
+        uses: dflook/terraform-apply@v1.42.0
+        with:
+          path: ./terraform
+          auto_approve: true
+          workspace: resume-workspace
+          variables: |
+            app_image = "shughesuk/backend:${{ needs.deploy-backend.outputs.sha }}"
+        env:
+          TERRAFORM_CLOUD_TOKENS: app.terraform.io=${{ secrets.TF_API_TOKEN }}
+  deploy-frontend:
+    needs: terraform
     environment: frontend-production
     concurrency: frontend-production
     permissions:
@@ -62,22 +81,3 @@ jobs:
           locked: true
       - name: Deploy
         run: pixi run frontend-deploy
-  terraform:
-    needs: deploy-backend
-    name: "Terraform Apply"
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: terraform-apply
-        uses: dflook/terraform-apply@v1.42.0
-        with:
-          path: ./terraform
-          auto_approve: true
-          workspace: resume-workspace
-          variables: |
-            app_image = "shughesuk/backend:${{ needs.deploy-backend.outputs.sha }}"
-        env:
-          TERRAFORM_CLOUD_TOKENS: app.terraform.io=${{ secrets.TF_API_TOKEN }}
