@@ -100,11 +100,11 @@ locals {
       environment = [
         {
           name  = "ALLOWED_HOSTS"
-          value = local.api_domain_name
+          value = "${local.api_domain_name},${local.domain_name}"
         },
         {
           name  = "CORS_ALLOWED_ORIGINS"
-          value = "https://${local.api_domain_name}"
+          value = "https://${local.api_domain_name},https://${local.domain_name}"
         },
         {
           name  = "DB_HOST"
