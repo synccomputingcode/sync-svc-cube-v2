@@ -99,6 +99,14 @@ locals {
       ],
       environment = [
         {
+          name  = "ALLOWED_HOSTS"
+          value = local.api_domain_name
+        },
+        {
+          name  = "CORS_ALLOWED_ORIGINS"
+          value = "https://${local.api_domain_name}"
+        },
+        {
           name  = "DB_HOST"
           value = aws_db_instance.main.endpoint
         },

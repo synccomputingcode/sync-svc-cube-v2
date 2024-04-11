@@ -37,7 +37,7 @@ module "resume_cdn" {
 
   origin = {
     elb = {
-      domain_name = "api.${local.domain_name}"
+      domain_name = local.api_domain_name
       custom_origin_config = {
         http_port                = 80
         https_port               = 443

@@ -1,6 +1,7 @@
 
 locals {
-  domain_name = "samanthahughes.me"
+  domain_name     = "samanthahughes.me"
+  api_domain_name = "api.${local.domain_name}"
 }
 
 data "aws_route53_zone" "main" {
@@ -18,7 +19,7 @@ resource "aws_acm_certificate" "main" {
 }
 
 resource "aws_acm_certificate" "lb" {
-  domain_name       = "api.${local.domain_name}"
+  domain_name       = local.api_domain_name
   validation_method = "DNS"
   lifecycle {
     create_before_destroy = true
@@ -94,7 +95,7 @@ resource "aws_route53_record" "www" {
 
 resource "aws_route53_record" "lb" {
   zone_id = data.aws_route53_zone.main.zone_id
-  name    = "api.${local.domain_name}"
+  name    = local.api_domain_name
   type    = "A"
   alias {
     name                   = aws_lb.main.dns_name
