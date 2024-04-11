@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+from socket import gethostbyname, gethostname
 
 import environ
 from dotenv import load_dotenv
@@ -49,6 +50,8 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
 
 if ENV_NAME == "production" and ALLOWED_HOSTS == ["localhost", "127.0.0.1"]:
     raise ValueError("You must set ALLOWED_HOSTS in production environment")
+
+ALLOWED_HOSTS.extend([gethostname(), gethostbyname(gethostname())])
 
 
 CORS_ALLOWED_ORIGINS = env.list(
