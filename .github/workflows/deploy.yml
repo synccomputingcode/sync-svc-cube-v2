@@ -38,6 +38,7 @@ jobs:
           push: true
           tags: shughesuk/backend:${{ steps.short_sha.outputs.sha }}
   deploy-frontend:
+    needs: deploy-backend
     environment: frontend-production
     concurrency: frontend-production
     permissions:
