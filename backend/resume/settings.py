@@ -42,7 +42,7 @@ if (
 
 DEBUG = env.bool("DEBUG", default=False)
 
-if (ENV_NAME == "production") and DEBUG:
+if ENV_NAME == "production" and DEBUG:
     raise ValueError("You can't enable DEBUG in production environment")
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
@@ -52,10 +52,21 @@ if ENV_NAME == "production" and ALLOWED_HOSTS == ["localhost", "127.0.0.1"]:
 
 
 CORS_ALLOWED_ORIGINS = env.list(
-    "CORS_ALLOWED_ORIGINS", default=["http://localhost:8000", "http://127.0.0.1:8000"]
+    "CORS_ALLOWED_ORIGINS",
+    default=[
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
 )
 
-if CORS_ALLOWED_ORIGINS == ["http://localhost:8000", "http://127.0.0.1:8000"]:
+if ENV_NAME == "production" and CORS_ALLOWED_ORIGINS == [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]:
     raise ValueError("You must set CORS_ALLOWED_ORIGINS in production environment")
 
 # Application definition
@@ -68,6 +79,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "corsheaders",
+    "ninja",
 ]
 
 MIDDLEWARE = [

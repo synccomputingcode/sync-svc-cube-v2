@@ -1,8 +1,12 @@
-from ninja import NinjaAPI
+from ninja import NinjaAPI, Schema
 
 api = NinjaAPI()
 
 
-@api.get("/healthcheck")
+class HealthCheckSchema(Schema):
+    message: str
+
+
+@api.get("/healthcheck", response=HealthCheckSchema)
 def hello(request):
     return {"message": "Hello World"}

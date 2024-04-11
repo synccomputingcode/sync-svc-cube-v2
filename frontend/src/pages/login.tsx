@@ -16,8 +16,11 @@ import {
 } from "@mui/material";
 import Grid2 from "@mui/material/Unstable_Grid2/Grid2";
 import { CopyButton } from "../components/CopyButton";
+import { useHealthcheck } from "../crud/misc/hooks";
 
 export function LoginView(): React.ReactElement {
+  const { data: barf, isSuccess } = useHealthcheck();
+  console.log("DATA", barf, isSuccess);
   return (
     <Box
       sx={{
