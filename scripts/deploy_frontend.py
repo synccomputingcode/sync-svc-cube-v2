@@ -15,19 +15,24 @@ def get_ssm_parameter(name):
     return response["Parameter"]["Value"]
 
 
-def upload_file_to_s3(file: Path, bucket: str, subdir: Path, s3):
+def upload_file_to_s3(parent: Path, file: Path, bucket: str, subdir: Path, s3):
     if file.is_file():
         # detect content type
         content_type = mimetypes.guess_type(str(file))[0]
         if content_type is None:
             content_type = "application/octet-stream"
+        fp = (
+            str(subdir / file.relative_to(parent))
+            if subdir
+            else str(file.relative_to(parent))
+        )
         s3.upload_file(
             Filename=str(file),
             Bucket=bucket,
-            Key=str(subdir / file.relative_to(file.parent)),
+            Key=fp,
             ExtraArgs={"ContentType": content_type},
         )
-        click.echo(f"Uploaded {file} to s3://{bucket}")
+        click.echo(f"Uploaded {file} to s3://{bucket}/{fp}")
 
 
 def upload_directory_to_s3(bucket: str, path: Path, subdir: Path = Path(".")):
@@ -35,7 +40,9 @@ def upload_directory_to_s3(bucket: str, path: Path, subdir: Path = Path(".")):
         futures = []
         client = boto3.client("s3")
         for file in path.rglob("*"):
-            future = executor.submit(upload_file_to_s3, file, bucket, subdir, client)
+            future = executor.submit(
+                upload_file_to_s3, path, file, bucket, subdir, client
+            )
             futures.append(future)
 
         # Wait for all futures to complete
@@ -59,7 +66,7 @@ def deploy_frontend():
     click.echo("Deploying frontend")
     # check frontend is built
     for subdir, path in [
-        (Path("."), Path("frontend/dist")),
+        (Path("./"), Path("frontend/dist")),
         (Path("static"), Path("backend/staticfiles")),
     ]:
         if not path.exists():
