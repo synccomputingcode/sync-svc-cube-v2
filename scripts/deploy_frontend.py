@@ -24,9 +24,9 @@ def upload_directory_to_s3(bucket: str, path: Path, subdir: Path = Path(".")):
             if content_type is None:
                 content_type = "application/octet-stream"
             s3.upload_file(
-                str(file),
-                bucket,
-                subdir / str(file.relative_to(path)),
+                Filename=str(file),
+                Bucket=bucket,
+                Key=str(subdir / file.relative_to(path)),
                 ExtraArgs={"ContentType": content_type},
             )
             click.echo(f"Uploaded {file} to s3://{bucket}")
