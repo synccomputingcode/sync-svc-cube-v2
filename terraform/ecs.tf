@@ -156,7 +156,7 @@ resource "aws_ecs_service" "main" {
   wait_for_steady_state = true
 
   deployment_maximum_percent         = 200
-  deployment_minimum_healthy_percent = 100
+  deployment_minimum_healthy_percent = 0
 
   network_configuration {
     subnets          = module.vpc.public_subnets
