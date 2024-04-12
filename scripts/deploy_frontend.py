@@ -1,6 +1,7 @@
 import mimetypes
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, wait
 from pathlib import Path
 
 import boto3
@@ -14,22 +15,31 @@ def get_ssm_parameter(name):
     return response["Parameter"]["Value"]
 
 
-def upload_directory_to_s3(bucket: str, path: Path, subdir: Path = Path(".")):
-    s3 = boto3.client("s3")
-    for file in path.rglob("*"):
-        if file.is_file():
-            # detect content type
+def upload_file_to_s3(file: Path, bucket: str, subdir: Path, s3):
+    if file.is_file():
+        # detect content type
+        content_type = mimetypes.guess_type(str(file))[0]
+        if content_type is None:
+            content_type = "application/octet-stream"
+        s3.upload_file(
+            Filename=str(file),
+            Bucket=bucket,
+            Key=str(subdir / file.relative_to(file.parent)),
+            ExtraArgs={"ContentType": content_type},
+        )
+        click.echo(f"Uploaded {file} to s3://{bucket}")
 
-            content_type = mimetypes.guess_type(str(file))[0]
-            if content_type is None:
-                content_type = "application/octet-stream"
-            s3.upload_file(
-                Filename=str(file),
-                Bucket=bucket,
-                Key=str(subdir / file.relative_to(path)),
-                ExtraArgs={"ContentType": content_type},
-            )
-            click.echo(f"Uploaded {file} to s3://{bucket}")
+
+def upload_directory_to_s3(bucket: str, path: Path, subdir: Path = Path(".")):
+    with ThreadPoolExecutor(max_workers=20) as executor:
+        futures = []
+        client = boto3.client("s3")
+        for file in path.rglob("*"):
+            future = executor.submit(upload_file_to_s3, file, bucket, subdir, client)
+            futures.append(future)
+
+        # Wait for all futures to complete
+        wait(futures)
 
 
 def create_cloudfront_invalidation(distribution_id: str):
@@ -48,7 +58,10 @@ def create_cloudfront_invalidation(distribution_id: str):
 def deploy_frontend():
     click.echo("Deploying frontend")
     # check frontend is built
-    for path in [Path("frontend/dist"), Path("backend/staticfiles")]:
+    for subdir, path in [
+        (Path("."), Path("frontend/dist")),
+        (Path("static"), Path("backend/staticfiles")),
+    ]:
         if not path.exists():
             click.echo(
                 f"{path} is not built."
@@ -58,7 +71,7 @@ def deploy_frontend():
             sys.exit(1)
         target_bucket = get_ssm_parameter("/resume/s3/bucket")
         # upload to s3
-        upload_directory_to_s3(target_bucket, path)
+        upload_directory_to_s3(target_bucket, path, subdir)
     # reset cloudfront distribution
     cloudfront_distribution_id = get_ssm_parameter("/resume/cdn/distribution_id")
     create_cloudfront_invalidation(cloudfront_distribution_id)
