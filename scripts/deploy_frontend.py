@@ -1,9 +1,10 @@
-from pathlib import Path
+import mimetypes
 import sys
 import time
-import click
+from pathlib import Path
+
 import boto3
-import mimetypes
+import click
 
 
 def get_ssm_parameter(name):
@@ -13,7 +14,7 @@ def get_ssm_parameter(name):
     return response["Parameter"]["Value"]
 
 
-def upload_directory_to_s3(bucket: str, path: Path):
+def upload_directory_to_s3(bucket: str, path: Path, subdir: Path = Path(".")):
     s3 = boto3.client("s3")
     for file in path.rglob("*"):
         if file.is_file():
@@ -25,7 +26,7 @@ def upload_directory_to_s3(bucket: str, path: Path):
             s3.upload_file(
                 str(file),
                 bucket,
-                str(file.relative_to(path)),
+                subdir / str(file.relative_to(path)),
                 ExtraArgs={"ContentType": content_type},
             )
             click.echo(f"Uploaded {file} to s3://{bucket}")
@@ -47,13 +48,17 @@ def create_cloudfront_invalidation(distribution_id: str):
 def deploy_frontend():
     click.echo("Deploying frontend")
     # check frontend is built
-    build_path = Path("frontend/dist")
-    if not build_path.exists():
-        click.echo("Frontend is not built. Run `pixi run frontend-build`")
-        sys.exit(1)
-    target_bucket = get_ssm_parameter("/resume/s3/bucket")
-    # upload to s3
-    upload_directory_to_s3(target_bucket, build_path)
+    for path in [Path("frontend/dist"), Path("backend/staticfiles")]:
+        if not path.exists():
+            click.echo(
+                f"{path} is not built."
+                " Run `pixi run frontend-build` "
+                "or `pixi run backend-collect-statics`"
+            )
+            sys.exit(1)
+        target_bucket = get_ssm_parameter("/resume/s3/bucket")
+        # upload to s3
+        upload_directory_to_s3(target_bucket, path)
     # reset cloudfront distribution
     cloudfront_distribution_id = get_ssm_parameter("/resume/cdn/distribution_id")
     create_cloudfront_invalidation(cloudfront_distribution_id)
