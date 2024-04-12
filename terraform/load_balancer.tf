@@ -17,7 +17,7 @@ resource "aws_lb_target_group" "main" {
 
   health_check {
     path              = "/api/healthcheck"
-    healthy_threshold = 1
+    healthy_threshold = 2
     interval          = 15
   }
 }
