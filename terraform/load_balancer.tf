@@ -8,14 +8,17 @@ resource "aws_lb" "main" {
 }
 
 resource "aws_lb_target_group" "main" {
-  name        = "production-tg"
-  port        = 80
-  protocol    = "HTTP"
-  vpc_id      = module.vpc.vpc_id
-  target_type = "ip"
+  name                 = "production-tg"
+  port                 = 80
+  protocol             = "HTTP"
+  vpc_id               = module.vpc.vpc_id
+  target_type          = "ip"
+  deregistration_delay = 5
 
   health_check {
-    path = "/api/healthcheck"
+    path              = "/api/healthcheck"
+    healthy_threshold = 1
+    interval          = 15
   }
 }
 

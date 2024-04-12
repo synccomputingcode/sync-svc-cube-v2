@@ -155,6 +155,9 @@ resource "aws_ecs_service" "main" {
   launch_type           = "FARGATE"
   wait_for_steady_state = true
 
+  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 100
+
   network_configuration {
     subnets          = module.vpc.public_subnets
     security_groups  = [aws_security_group.ecs_service.id]
