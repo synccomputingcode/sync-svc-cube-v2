@@ -26,8 +26,6 @@ import {
 import Grid2 from "@mui/material/Unstable_Grid2/Grid2";
 import { CopyButton } from "../components/CopyButton";
 import { useRef, useState } from "react";
-import PDFResume from "../assets/Samantha_Hughes_Resume.pdf";
-import DocXResume from "../assets/Samantha_Hughes_Resume.docx";
 
 export function LoginView(): React.ReactElement {
   const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState(false);
@@ -176,7 +174,7 @@ export function LoginView(): React.ReactElement {
                   >
                     <MenuItem
                       component={Link}
-                      href={DocXResume}
+                      href={"/Samantha_Hughes_Resume.docx"}
                       download
                       target="_blank"
                       onClick={() => setIsDownloadMenuOpen(false)}
@@ -188,7 +186,7 @@ export function LoginView(): React.ReactElement {
                     </MenuItem>
                     <MenuItem
                       component={Link}
-                      href={PDFResume}
+                      href={"/Samantha_Hughes_Resume.pdf"}
                       download
                       target="_blank"
                       onClick={() => setIsDownloadMenuOpen(false)}
