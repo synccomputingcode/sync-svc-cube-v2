@@ -18,6 +18,74 @@
           }
         }
       }
+    },
+    "/api/auth/google-login": {
+      "post": {
+        "operationId": "resume_views_auth_google_login",
+        "summary": "Google Login",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserSchema" }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SocialLoginSchema" }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/api/auth/log-out": {
+      "post": {
+        "operationId": "resume_views_auth_log_out",
+        "summary": "Log Out",
+        "parameters": [],
+        "responses": { "200": { "description": "OK" } },
+        "security": [{ "SessionAuth": [] }]
+      }
+    },
+    "/api/user/me": {
+      "get": {
+        "operationId": "resume_views_user_identify",
+        "summary": "Identify",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserSchema" }
+              }
+            }
+          }
+        },
+        "security": [{ "SessionAuth": [] }]
+      }
     }
   },
   "components": {
@@ -27,7 +95,33 @@
         "required": ["message"],
         "title": "HealthCheckSchema",
         "type": "object"
+      },
+      "UserSchema": {
+        "properties": {
+          "first_name": { "title": "First Name", "type": "string" },
+          "last_name": { "title": "Last Name", "type": "string" }
+        },
+        "required": ["first_name", "last_name"],
+        "title": "UserSchema",
+        "type": "object"
+      },
+      "Error": {
+        "properties": { "message": { "title": "Message", "type": "string" } },
+        "required": ["message"],
+        "title": "Error",
+        "type": "object"
+      },
+      "SocialLoginSchema": {
+        "properties": {
+          "access_token": { "title": "Access Token", "type": "string" }
+        },
+        "required": ["access_token"],
+        "title": "SocialLoginSchema",
+        "type": "object"
       }
+    },
+    "securitySchemes": {
+      "SessionAuth": { "type": "apiKey", "in": "cookie", "name": "sessionid" }
     }
   },
   "servers": []

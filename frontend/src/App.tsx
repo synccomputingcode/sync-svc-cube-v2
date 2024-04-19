@@ -1,8 +1,9 @@
 import { GitHub } from "@mui/icons-material";
-import { LoginView } from "./pages/login";
 import { Link, Tooltip } from "@mui/material";
 import { useLocalStorage } from "usehooks-ts";
 import { useEffect } from "react";
+import { Outlet } from "react-router-dom";
+import { AuthProvider } from "./components/providers/auth";
 
 function App() {
   const [hasSeenSourceTooltip, setHasSeenSourceTooltip] =
@@ -15,9 +16,8 @@ function App() {
     }
   });
   return (
-    <>
-      <LoginView />
-
+    <AuthProvider>
+      <Outlet />
       <Link component={Link} href="https://github.com/shughes-uk/resume">
         <Tooltip
           open={hasSeenSourceTooltip ? undefined : true}
@@ -35,7 +35,7 @@ function App() {
           />
         </Tooltip>
       </Link>
-    </>
+    </AuthProvider>
   );
 }
 

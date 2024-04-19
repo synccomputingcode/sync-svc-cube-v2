@@ -4,3 +4,4 @@ sam.synctex.gz
 # pixi environments
 .pixi
 .ruff_cache
+.env

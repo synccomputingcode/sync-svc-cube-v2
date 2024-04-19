@@ -16,11 +16,21 @@
 import * as runtime from '../runtime';
 import type {
   HealthCheckSchema,
+  SocialLoginSchema,
+  UserSchema,
 } from '../models/index';
 import {
     HealthCheckSchemaFromJSON,
     HealthCheckSchemaToJSON,
+    SocialLoginSchemaFromJSON,
+    SocialLoginSchemaToJSON,
+    UserSchemaFromJSON,
+    UserSchemaToJSON,
 } from '../models/index';
+
+export interface ResumeViewsAuthGoogleLoginRequest {
+    socialLoginSchema: SocialLoginSchema;
+}
 
 /**
  * 
@@ -50,6 +60,93 @@ export class DefaultApi extends runtime.BaseAPI {
      */
     async resumeApiHello(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<HealthCheckSchema> {
         const response = await this.resumeApiHelloRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Google Login
+     */
+    async resumeViewsAuthGoogleLoginRaw(requestParameters: ResumeViewsAuthGoogleLoginRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UserSchema>> {
+        if (requestParameters['socialLoginSchema'] == null) {
+            throw new runtime.RequiredError(
+                'socialLoginSchema',
+                'Required parameter "socialLoginSchema" was null or undefined when calling resumeViewsAuthGoogleLogin().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/api/auth/google-login`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: SocialLoginSchemaToJSON(requestParameters['socialLoginSchema']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => UserSchemaFromJSON(jsonValue));
+    }
+
+    /**
+     * Google Login
+     */
+    async resumeViewsAuthGoogleLogin(requestParameters: ResumeViewsAuthGoogleLoginRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UserSchema> {
+        const response = await this.resumeViewsAuthGoogleLoginRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Log Out
+     */
+    async resumeViewsAuthLogOutRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/api/auth/log-out`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Log Out
+     */
+    async resumeViewsAuthLogOut(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.resumeViewsAuthLogOutRaw(initOverrides);
+    }
+
+    /**
+     * Identify
+     */
+    async resumeViewsUserIdentifyRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UserSchema>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/api/user/me`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => UserSchemaFromJSON(jsonValue));
+    }
+
+    /**
+     * Identify
+     */
+    async resumeViewsUserIdentify(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UserSchema> {
+        const response = await this.resumeViewsUserIdentifyRaw(initOverrides);
         return await response.value();
     }
 

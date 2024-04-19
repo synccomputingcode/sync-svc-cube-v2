@@ -2,6 +2,7 @@
 
 interface ImportMetaEnv {
   readonly VITE_API_PATH: string;
+  readonly VITE_GOOGLE_CLIENT_ID: string;
 }
 
 interface ImportMeta {

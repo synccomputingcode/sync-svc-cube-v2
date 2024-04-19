@@ -8,7 +8,9 @@ version = "0.1.0"
 
 [tasks]
 backend-collect-statics = { cmd = "ENV_NAME=dev python manage.py collectstatic --noinput", cwd = "backend" }
-frontend-autogen-client = { cmd = "npm run autogen-client", cwd = "frontend", depends_on = [
+backend-dev = { cmd = "DEBUG=True ENV_NAME=dev uvicorn resume.asgi:application --reload --log-config logging.yaml", cwd = "backend" }
+backend-migrations = { cmd = "python manage.py migrate", cwd = "backend" }
+frontend-autogen-client = { cmd = "rm -rf src/api-client && npm run autogen-client", cwd = "frontend", depends_on = [
     "frontend-install",
 ] }
 frontend-build = { cmd = "npm run build", cwd = "frontend", depends_on = [
@@ -38,7 +40,9 @@ terraform = ">=1.7.5,<1.8"
 [pypi-dependencies]
 boto3 = "*"
 click = "*"
+colorlog = "*"
 django = "*"
+django-allauth = "*"
 django-cors-headers = "*"
 django-environ = "*"
 django-ninja = "*"

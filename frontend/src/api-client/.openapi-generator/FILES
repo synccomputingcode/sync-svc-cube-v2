@@ -3,5 +3,8 @@ apis/DefaultApi.ts
 apis/index.ts
 index.ts
 models/HealthCheckSchema.ts
+models/ModelError.ts
+models/SocialLoginSchema.ts
+models/UserSchema.ts
 models/index.ts
 runtime.ts

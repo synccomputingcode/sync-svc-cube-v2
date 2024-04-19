@@ -63,6 +63,10 @@ CORS_ALLOWED_ORIGINS = env.list(
         "http://127.0.0.1:5173",
     ],
 )
+CORS_ALLOW_CREDENTIALS = True
+CSRF_USE_SESSIONS = False
+CSRF_COOKIE_HTTPONLY = False
+CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 
 if ENV_NAME == "production" and CORS_ALLOWED_ORIGINS == [
     "http://localhost:8000",
@@ -81,6 +85,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
     "corsheaders",
     "ninja",
 ]
@@ -94,6 +102,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "resume.urls"
