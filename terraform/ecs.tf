@@ -107,6 +107,10 @@ locals {
           value = "https://${local.api_domain_name},https://${local.domain_name}"
         },
         {
+          name="CSRF_COOKIE_DOMAIN"
+          value=".${local.domain_name}"
+        },
+        {
           name  = "DB_HOST"
           value = aws_db_instance.main.address
         },
