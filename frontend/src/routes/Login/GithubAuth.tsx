@@ -31,7 +31,7 @@ export const GithubAuth = (): React.ReactElement => {
         const params = new URLSearchParams({
           client_id: import.meta.env.VITE_GITHUB_CLIENT_ID,
           redirect_uri: `${window.location.origin}/github/callback`,
-          scope: "read:user",
+          scope: "read:user, user:email",
         });
         window.location.href = `https://github.com/login/oauth/authorize?${params.toString()}`;
       }}
