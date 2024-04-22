@@ -65,7 +65,7 @@ export const MainLayout = (): React.ReactElement => {
         sx={{ width: `calc(100% - ${drawerWidth}px)`, ml: `${drawerWidth}px` }}
       >
         <Toolbar>
-          <Grid2 container width={1}>
+          <Grid2 container width={1} wrap="nowrap">
             <Grid2>
               <Stack direction="row" alignItems={"center"} spacing={1}>
                 <Typography variant="h5" noWrap sx={{ fontWeight: 900 }}>
