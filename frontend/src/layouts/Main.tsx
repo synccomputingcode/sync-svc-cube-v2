@@ -145,7 +145,12 @@ export const MainLayout = (): React.ReactElement => {
           })}
         </List>
       </Drawer>
-      <Paper sx={{ flexGrow: 1 }}>
+      <Paper
+        sx={{
+          flexGrow: 1,
+          background: (theme) => theme.palette.gradient.default,
+        }}
+      >
         <Container>
           <Toolbar sx={{ mb: 2 }} />
           <Outlet />

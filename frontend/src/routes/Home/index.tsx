@@ -107,10 +107,10 @@ export const HomeView = (): React.ReactElement => {
   const { user } = useContext(UserContext);
   return (
     <Stack spacing={2}>
-      <Typography variant="h2">
+      <Typography variant="h2" sx={{ fontWeight: "600" }}>
         Hello there{user.firstName ? ` ${user.firstName}` : ""}! 👋
       </Typography>
-      <Typography variant="subtitle1">
+      <Typography variant="subtitle1" sx={{ fontWeight: "500" }}>
         This little demo site is intended as a simple showcase of skills.
       </Typography>
       <Divider />

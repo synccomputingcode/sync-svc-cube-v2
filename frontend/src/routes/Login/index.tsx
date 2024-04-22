@@ -1,4 +1,4 @@
-import { Box, Stack, Typography } from "@mui/material";
+import { Paper, Stack, Typography } from "@mui/material";
 import Grid2 from "@mui/material/Unstable_Grid2/Grid2";
 import { GetInTouchCard } from "./GetInTouchCard";
 import { LoginCard } from "./LoginCard";
@@ -9,7 +9,7 @@ import { AuthenticatedCard } from "./AuthenticatedCard";
 export const LoginView = (): React.ReactElement => {
   const { user } = useContext(AuthContext);
   return (
-    <Box
+    <Paper
       sx={{
         background: (theme) => theme.palette.gradient.default,
         minHeight: "100dvh",
@@ -32,13 +32,11 @@ export const LoginView = (): React.ReactElement => {
                 md: theme.typography.h1.fontSize,
               }),
             }}
-            color="primary.contrastText"
           >
             Samantha Hughes
           </Typography>
           <Typography
             variant="h2"
-            color="primary.contrastText"
             sx={{
               whiteSpace: "nowrap",
               fontSize: (theme) => ({
@@ -65,6 +63,6 @@ export const LoginView = (): React.ReactElement => {
           </Stack>
         </Grid2>
       </Grid2>
-    </Box>
+    </Paper>
   );
 };

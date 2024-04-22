@@ -12,11 +12,11 @@ export const theme = createTheme({
   palette: {
     mode: "dark",
     primary: {
-      main: "#926fc9",
+      main: "#d8acff",
     },
     background: {
-      default: "#121212",
-      paper: "#1e1b22",
+      default: "#281942",
+      paper: "#281942",
     },
     gradient: {
       default:
