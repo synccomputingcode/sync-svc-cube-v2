@@ -6,7 +6,7 @@ import { useContext } from "react";
 import { AuthContext } from "../../components/context/auth";
 import { AuthenticatedCard } from "./AuthenticatedCard";
 
-export function LoginView(): React.ReactElement {
+export const LoginView = (): React.ReactElement => {
   const { user } = useContext(AuthContext);
   return (
     <Box
@@ -67,4 +67,4 @@ export function LoginView(): React.ReactElement {
       </Grid2>
     </Box>
   );
-}
+};

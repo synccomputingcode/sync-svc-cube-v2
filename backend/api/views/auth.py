@@ -10,7 +10,7 @@ from django.http.request import HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from ninja import Router, Schema
 
-from resume.views.schema.user import UserSchema
+from api.views.schema.user import UserSchema
 
 """
 Lots of hacking around allauth to get social login working with rest style endpoints.

@@ -4,6 +4,6 @@ import { ResponseError, UserSchema } from "../api-client";
 
 export const useMe = () => {
   return useQuery<UserSchema, ResponseError>(["identifyMe"], () => {
-    return ApiClient.resumeViewsUserIdentify();
+    return ApiClient.apiViewsUserIdentify();
   });
 };

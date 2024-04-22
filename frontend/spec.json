@@ -4,7 +4,7 @@
   "paths": {
     "/api/healthcheck": {
       "get": {
-        "operationId": "resume_api_hello",
+        "operationId": "api_api_hello",
         "summary": "Hello",
         "parameters": [],
         "responses": {
@@ -21,7 +21,7 @@
     },
     "/api/auth/google-login": {
       "post": {
-        "operationId": "resume_views_auth_google_login",
+        "operationId": "api_views_auth_google_login",
         "summary": "Google Login",
         "parameters": [],
         "responses": {
@@ -62,7 +62,7 @@
     },
     "/api/auth/github-login": {
       "post": {
-        "operationId": "resume_views_auth_github_login",
+        "operationId": "api_views_auth_github_login",
         "summary": "Github Login",
         "parameters": [],
         "responses": {
@@ -103,7 +103,7 @@
     },
     "/api/auth/log-out": {
       "post": {
-        "operationId": "resume_views_auth_log_out",
+        "operationId": "api_views_auth_log_out",
         "summary": "Log Out",
         "parameters": [],
         "responses": { "200": { "description": "OK" } },
@@ -112,7 +112,7 @@
     },
     "/api/user/me": {
       "get": {
-        "operationId": "resume_views_user_identify",
+        "operationId": "api_views_user_identify",
         "summary": "Identify",
         "parameters": [],
         "responses": {
@@ -140,9 +140,11 @@
       "UserSchema": {
         "properties": {
           "first_name": { "title": "First Name", "type": "string" },
-          "last_name": { "title": "Last Name", "type": "string" }
+          "last_name": { "title": "Last Name", "type": "string" },
+          "email": { "title": "Email", "type": "string" },
+          "avatar_url": { "title": "Avatar Url", "type": "string" }
         },
-        "required": ["first_name", "last_name"],
+        "required": ["first_name", "last_name", "email", "avatar_url"],
         "title": "UserSchema",
         "type": "object"
       },

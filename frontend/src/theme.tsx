@@ -10,11 +10,13 @@ declare module "@mui/material/styles" {
 }
 export const theme = createTheme({
   palette: {
+    mode: "dark",
     primary: {
-      main: "rgb(30,30,30)",
-      light: "rgb(30,30,30)",
-      dark: "rgb(30,30,30)",
-      contrastText: "rgb(255,255,255)",
+      main: "#926fc9",
+    },
+    background: {
+      default: "#121212",
+      paper: "#1e1b22",
     },
     gradient: {
       default:

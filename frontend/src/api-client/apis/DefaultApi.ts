@@ -28,11 +28,11 @@ import {
     UserSchemaToJSON,
 } from '../models/index';
 
-export interface ResumeViewsAuthGithubLoginRequest {
+export interface ApiViewsAuthGithubLoginRequest {
     socialLoginSchema: SocialLoginSchema;
 }
 
-export interface ResumeViewsAuthGoogleLoginRequest {
+export interface ApiViewsAuthGoogleLoginRequest {
     socialLoginSchema: SocialLoginSchema;
 }
 
@@ -44,7 +44,7 @@ export class DefaultApi extends runtime.BaseAPI {
     /**
      * Hello
      */
-    async resumeApiHelloRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<HealthCheckSchema>> {
+    async apiApiHelloRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<HealthCheckSchema>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -62,19 +62,19 @@ export class DefaultApi extends runtime.BaseAPI {
     /**
      * Hello
      */
-    async resumeApiHello(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<HealthCheckSchema> {
-        const response = await this.resumeApiHelloRaw(initOverrides);
+    async apiApiHello(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<HealthCheckSchema> {
+        const response = await this.apiApiHelloRaw(initOverrides);
         return await response.value();
     }
 
     /**
      * Github Login
      */
-    async resumeViewsAuthGithubLoginRaw(requestParameters: ResumeViewsAuthGithubLoginRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UserSchema>> {
+    async apiViewsAuthGithubLoginRaw(requestParameters: ApiViewsAuthGithubLoginRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UserSchema>> {
         if (requestParameters['socialLoginSchema'] == null) {
             throw new runtime.RequiredError(
                 'socialLoginSchema',
-                'Required parameter "socialLoginSchema" was null or undefined when calling resumeViewsAuthGithubLogin().'
+                'Required parameter "socialLoginSchema" was null or undefined when calling apiViewsAuthGithubLogin().'
             );
         }
 
@@ -98,19 +98,19 @@ export class DefaultApi extends runtime.BaseAPI {
     /**
      * Github Login
      */
-    async resumeViewsAuthGithubLogin(requestParameters: ResumeViewsAuthGithubLoginRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UserSchema> {
-        const response = await this.resumeViewsAuthGithubLoginRaw(requestParameters, initOverrides);
+    async apiViewsAuthGithubLogin(requestParameters: ApiViewsAuthGithubLoginRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UserSchema> {
+        const response = await this.apiViewsAuthGithubLoginRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
     /**
      * Google Login
      */
-    async resumeViewsAuthGoogleLoginRaw(requestParameters: ResumeViewsAuthGoogleLoginRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UserSchema>> {
+    async apiViewsAuthGoogleLoginRaw(requestParameters: ApiViewsAuthGoogleLoginRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UserSchema>> {
         if (requestParameters['socialLoginSchema'] == null) {
             throw new runtime.RequiredError(
                 'socialLoginSchema',
-                'Required parameter "socialLoginSchema" was null or undefined when calling resumeViewsAuthGoogleLogin().'
+                'Required parameter "socialLoginSchema" was null or undefined when calling apiViewsAuthGoogleLogin().'
             );
         }
 
@@ -134,15 +134,15 @@ export class DefaultApi extends runtime.BaseAPI {
     /**
      * Google Login
      */
-    async resumeViewsAuthGoogleLogin(requestParameters: ResumeViewsAuthGoogleLoginRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UserSchema> {
-        const response = await this.resumeViewsAuthGoogleLoginRaw(requestParameters, initOverrides);
+    async apiViewsAuthGoogleLogin(requestParameters: ApiViewsAuthGoogleLoginRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UserSchema> {
+        const response = await this.apiViewsAuthGoogleLoginRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
     /**
      * Log Out
      */
-    async resumeViewsAuthLogOutRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+    async apiViewsAuthLogOutRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -160,14 +160,14 @@ export class DefaultApi extends runtime.BaseAPI {
     /**
      * Log Out
      */
-    async resumeViewsAuthLogOut(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.resumeViewsAuthLogOutRaw(initOverrides);
+    async apiViewsAuthLogOut(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.apiViewsAuthLogOutRaw(initOverrides);
     }
 
     /**
      * Identify
      */
-    async resumeViewsUserIdentifyRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UserSchema>> {
+    async apiViewsUserIdentifyRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UserSchema>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -185,8 +185,8 @@ export class DefaultApi extends runtime.BaseAPI {
     /**
      * Identify
      */
-    async resumeViewsUserIdentify(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UserSchema> {
-        const response = await this.resumeViewsUserIdentifyRaw(initOverrides);
+    async apiViewsUserIdentify(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UserSchema> {
+        const response = await this.apiViewsUserIdentifyRaw(initOverrides);
         return await response.value();
     }
 

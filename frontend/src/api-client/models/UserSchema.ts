@@ -31,6 +31,18 @@ export interface UserSchema {
      * @memberof UserSchema
      */
     lastName: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UserSchema
+     */
+    email: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UserSchema
+     */
+    avatarUrl: string;
 }
 
 /**
@@ -39,6 +51,8 @@ export interface UserSchema {
 export function instanceOfUserSchema(value: object): boolean {
     if (!('firstName' in value)) return false;
     if (!('lastName' in value)) return false;
+    if (!('email' in value)) return false;
+    if (!('avatarUrl' in value)) return false;
     return true;
 }
 
@@ -54,6 +68,8 @@ export function UserSchemaFromJSONTyped(json: any, ignoreDiscriminator: boolean)
         
         'firstName': json['first_name'],
         'lastName': json['last_name'],
+        'email': json['email'],
+        'avatarUrl': json['avatar_url'],
     };
 }
 
@@ -65,6 +81,8 @@ export function UserSchemaToJSON(value?: UserSchema | null): any {
         
         'first_name': value['firstName'],
         'last_name': value['lastName'],
+        'email': value['email'],
+        'avatar_url': value['avatarUrl'],
     };
 }
 

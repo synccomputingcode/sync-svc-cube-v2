@@ -35,8 +35,8 @@ export const GithubAuth = (): React.ReactElement => {
         });
         window.location.href = `https://github.com/login/oauth/authorize?${params.toString()}`;
       }}
-      variant="outlined"
-      startIcon={<GitHub />}
+      variant="contained"
+      startIcon={<GitHub color="action" />}
     >
       Continue with GitHub
     </Button>

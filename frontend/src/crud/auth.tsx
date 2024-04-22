@@ -4,6 +4,7 @@ import { ResponseError, UserSchema } from "../api-client";
 import { useCallback, useContext } from "react";
 import { AuthContext } from "../components/context/auth";
 import { useNavigate } from "react-router-dom";
+import { URLS } from "../urls";
 
 const useOnLogin = () => {
   const { login } = useContext(AuthContext);
@@ -11,7 +12,7 @@ const useOnLogin = () => {
   return useCallback(
     (data: UserSchema) => {
       login(data);
-      navigate("/", { replace: true });
+      navigate(URLS.Home, { replace: true });
     },
     [navigate, login],
   );
@@ -21,7 +22,7 @@ export const useGoogleLoginMutation = () => {
   const loginCallback = useOnLogin();
   return useMutation<UserSchema, ResponseError, string>(
     (accessToken: string) => {
-      return ApiClient.resumeViewsAuthGoogleLogin({
+      return ApiClient.apiViewsAuthGoogleLogin({
         socialLoginSchema: {
           accessToken,
         },
@@ -37,7 +38,7 @@ export const useGithubLoginMutation = () => {
   const loginCallback = useOnLogin();
   return useMutation<UserSchema, ResponseError, string>(
     (accessToken: string) => {
-      return ApiClient.resumeViewsAuthGithubLogin({
+      return ApiClient.apiViewsAuthGithubLogin({
         socialLoginSchema: {
           accessToken,
         },
@@ -51,6 +52,6 @@ export const useGithubLoginMutation = () => {
 
 export const useLogoutMutation = () => {
   return useMutation(() => {
-    return ApiClient.resumeViewsAuthLogOut();
+    return ApiClient.apiViewsAuthLogOut();
   });
 };

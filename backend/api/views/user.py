@@ -1,7 +1,7 @@
 from django.http import HttpRequest
 from ninja import Router
 
-from resume.views.schema.user import UserSchema
+from api.views.schema.user import UserSchema
 
 router = Router()
 

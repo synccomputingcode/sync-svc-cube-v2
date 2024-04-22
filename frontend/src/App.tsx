@@ -1,11 +1,11 @@
 import { GitHub } from "@mui/icons-material";
 import { Link, Tooltip } from "@mui/material";
 import { useLocalStorage } from "usehooks-ts";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { AuthProvider } from "./components/providers/auth";
 
-function App() {
+const App = (): React.ReactElement => {
   const [hasSeenSourceTooltip, setHasSeenSourceTooltip] =
     useLocalStorage<boolean>("hasSeenSourceTooltip", false);
   useEffect(() => {
@@ -25,7 +25,7 @@ function App() {
           arrow
         >
           <GitHub
-            htmlColor="black"
+            color="action"
             sx={{
               position: "fixed",
               bottom: "20px",
@@ -37,6 +37,6 @@ function App() {
       </Link>
     </AuthProvider>
   );
-}
+};
 
 export default App;

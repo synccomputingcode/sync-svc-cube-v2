@@ -9,8 +9,10 @@ import { theme } from "./theme.tsx";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { LoginView } from "./routes/Login/index.tsx";
 import { HomeView } from "./routes/Home/index.tsx";
-import { ProtectedRoute } from "./routes/protected.tsx";
+import { AuthenticatedRoute } from "./routes/protected.tsx";
 import { GithubCallback } from "./routes/Login/GithubAuth.tsx";
+import { URLS } from "./urls.ts";
+import { MainLayout } from "./layouts/Main.tsx";
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
@@ -19,20 +21,26 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       {
-        path: "/",
+        path: URLS.Login,
         element: <LoginView />,
       },
       {
-        path: "/github/callback",
+        path: URLS.GithubCallback,
         element: <GithubCallback />,
       },
       {
-        path: "/protected",
-        element: <ProtectedRoute />,
+        path: "/",
+        element: <AuthenticatedRoute />,
         children: [
           {
-            path: "*",
-            element: <HomeView />,
+            path: "/",
+            element: <MainLayout />,
+            children: [
+              {
+                path: URLS.Home,
+                element: <HomeView />,
+              },
+            ],
           },
         ],
       },

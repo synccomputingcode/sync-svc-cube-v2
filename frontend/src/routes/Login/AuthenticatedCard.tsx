@@ -9,7 +9,7 @@ import {
 import { useContext } from "react";
 import { AuthContext } from "../../components/context/auth";
 
-export function AuthenticatedCard(): React.ReactElement {
+export const AuthenticatedCard = (): React.ReactElement => {
   const { user, logout } = useContext(AuthContext);
   return (
     <Card elevation={10}>
@@ -30,4 +30,4 @@ export function AuthenticatedCard(): React.ReactElement {
       </CardContent>
     </Card>
   );
-}
+};

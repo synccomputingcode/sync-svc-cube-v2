@@ -93,6 +93,7 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.github",
     "corsheaders",
     "ninja",
+    "api",
 ]
 
 MIDDLEWARE = [

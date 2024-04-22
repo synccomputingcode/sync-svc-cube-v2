@@ -1,84 +1,133 @@
 import {
+  Avatar,
   Box,
   Button,
   Card,
+  CardActions,
   CardContent,
+  CardHeader,
+  CardMedia,
   Divider,
   Stack,
   Typography,
 } from "@mui/material";
 import Grid2 from "@mui/material/Unstable_Grid2/Grid2";
-import { GetInTouchCard } from "../Login/GetInTouchCard";
-import { useContext } from "react";
-import { AuthContext } from "../../components/context/auth";
+import ResumeThumbnail from "../../assets/resume-thumbnail.png";
+import MeetingThumbnail from "../../assets/meeting-thumbnail.png";
+import GithubThumbnail from "../../assets/github-thumbnail.png";
 
-export function HomeView(): React.ReactElement {
-  const { user, logout } = useContext(AuthContext);
+import { CalendarMonth, GitHub } from "@mui/icons-material";
+import { ContactDetails } from "../../components/contact";
+import { useContext } from "react";
+import { UserContext } from "../../components/context/user";
+
+const GithubCard = (): React.ReactElement => {
   return (
-    <Box
-      sx={{
-        background: (theme) => theme.palette.gradient.default,
-        minHeight: "100dvh",
-      }}
-    >
-      <Grid2
-        container
-        sx={{ paddingTop: { xs: "50px", sm: "120px" }, margin: 0 }}
-        spacing={2}
-        justifyContent={"center"}
-        alignItems={"center"}
-      >
-        <Grid2 md={6} sx={{ minWidth: "fit-content" }}>
-          <Typography
-            variant={"h1"}
-            sx={{
-              fontWeight: "600",
-              fontSize: (theme) => ({
-                xs: "2rem",
-                md: theme.typography.h1.fontSize,
-              }),
-            }}
-            color="primary.contrastText"
-          >
-            Samantha Hughes
-          </Typography>
-          <Typography
-            variant="h2"
-            color="primary.contrastText"
-            sx={{
-              whiteSpace: "nowrap",
-              fontSize: (theme) => ({
-                xs: "1.5rem",
-                md: theme.typography.h2.fontSize,
-              }),
-            }}
-          >
-            Full Stack Engineer
-          </Typography>
+    <Card elevation={10}>
+      <CardMedia src={GithubThumbnail} component="img" />
+      <CardActions>
+        <Button
+          variant="contained"
+          href="https://github.com/shughes-uk/resume"
+          target="_blank"
+          startIcon={<GitHub />}
+        >
+          Inspect the code
+        </Button>
+      </CardActions>
+    </Card>
+  );
+};
+
+const ContactCard = (): React.ReactElement => {
+  return (
+    <Card elevation={10}>
+      <CardHeader title="Contact" />
+      <Divider />
+      <CardContent>
+        <Stack direction="row" spacing={2}>
+          <Avatar
+            src="https://lh3.googleusercontent.com/a/ACg8ocLHF0AVVg5tDNTvWsUXqWZVvDU5qx0iPRcn0jONuWMtNxUrI03CDA=s96-c"
+            sx={{ width: 100, height: 100 }}
+          />
+          <Box>
+            <ContactDetails />
+          </Box>
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+};
+
+const BookMeetingCard = (): React.ReactElement => {
+  return (
+    <Card elevation={10}>
+      <CardMedia src={MeetingThumbnail} component="img" />
+      <CardActions>
+        <Button
+          variant="contained"
+          href="https://calendly.com/samanthahughes"
+          target="_blank"
+          startIcon={<CalendarMonth />}
+        >
+          {"Book a meeting"}
+        </Button>
+      </CardActions>
+    </Card>
+  );
+};
+
+const ResumeCard = (): React.ReactElement => {
+  return (
+    <Card elevation={10}>
+      <CardMedia src={ResumeThumbnail} component="img" />
+      <CardActions>
+        <Button
+          variant="contained"
+          href="/Samantha_Hughes_Resume.pdf"
+          download
+          target="_blank"
+        >
+          PDF Document (.pdf)
+        </Button>
+        <Button
+          variant="contained"
+          href="/Samantha_Hughes_Resume.docx"
+          download
+          target="_blank"
+        >
+          Microsoft Word (.docx)
+        </Button>
+      </CardActions>
+    </Card>
+  );
+};
+
+export const HomeView = (): React.ReactElement => {
+  const { user } = useContext(UserContext);
+  return (
+    <Stack spacing={2}>
+      <Typography variant="h2">
+        Hello there{user.firstName ? ` ${user.firstName}` : ""}! 👋
+      </Typography>
+      <Typography variant="subtitle1">
+        This little demo site is intended as a simple showcase of skills.
+      </Typography>
+      <Divider />
+      <Grid2 container spacing={2}>
+        <Grid2 xs={4} sx={{ minWidth: "450px" }}>
+          <ResumeCard />
         </Grid2>
-        <Grid2>
-          <Stack spacing={2}>
-            <GetInTouchCard />
-            <Card elevation={10}>
-              <CardContent>
-                <Stack spacing={1}>
-                  <Typography
-                    variant="h5"
-                    sx={{ fontWeight: 600, whiteSpace: "nowrap" }}
-                  >
-                    Hi {user?.firstName}!
-                  </Typography>
-                  <Divider />
-                  <Typography>You can log out if you want.</Typography>
-                  <Button variant="outlined" onClick={logout}>
-                    Log Out
-                  </Button>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Stack>
+        <Grid2 xs={4} sx={{ minWidth: "450px" }}>
+          <BookMeetingCard />
+        </Grid2>
+        <Grid2 xs={4} sx={{ minWidth: "450px" }}>
+          <GithubCard />
+        </Grid2>
+        <Grid2 xs={4} sx={{ minWidth: "450px" }}>
+          <ContactCard />
         </Grid2>
       </Grid2>
-    </Box>
+    </Stack>
   );
-}
+};

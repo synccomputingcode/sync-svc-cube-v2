@@ -1,9 +1,10 @@
 import { ContentCopyRounded, LibraryAddCheck } from "@mui/icons-material";
+import { Stack } from "@mui/material";
 import { useSnackbar } from "notistack";
 import { ReactElement, useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
-export function CopyButton({ text }: { text: string }): ReactElement {
+export const CopyButton = ({ text }: { text: string }): ReactElement => {
   const [, setCopied] = useCopyToClipboard();
   const [recentlyCopied, setRecentlyCopied] = useState(false);
   const [currentTimeout, setCurrentTimeout] = useState<number | null>(null);
@@ -24,12 +25,14 @@ export function CopyButton({ text }: { text: string }): ReactElement {
   };
   const IconToUse = recentlyCopied ? LibraryAddCheck : ContentCopyRounded;
   return (
-    <IconToUse
-      fontSize="small"
-      onClick={copyToClipboard}
-      sx={{
-        cursor: "pointer",
-      }}
-    ></IconToUse>
+    <Stack alignItems="center">
+      <IconToUse
+        fontSize="small"
+        onClick={copyToClipboard}
+        sx={{
+          cursor: "pointer",
+        }}
+      />
+    </Stack>
   );
-}
+};

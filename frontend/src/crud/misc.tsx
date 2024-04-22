@@ -4,7 +4,7 @@ import { ApiClient } from "../api";
 
 export const useHealthcheck = (): UseQueryResult<HealthCheckSchema> => {
   return useQuery<HealthCheckSchema>(["healthcheck"], ({ signal }) =>
-    ApiClient.resumeApiHello({
+    ApiClient.apiApiHello({
       signal,
     }),
   );

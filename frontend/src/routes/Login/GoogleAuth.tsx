@@ -18,7 +18,7 @@ export const GoogleAuth = (): React.ReactElement => {
   return (
     <Button
       onClick={() => login()}
-      variant="outlined"
+      variant="contained"
       startIcon={<GoogleIcon />}
     >
       Continue with Google
