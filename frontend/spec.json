@@ -60,6 +60,47 @@
         }
       }
     },
+    "/api/auth/github-login": {
+      "post": {
+        "operationId": "resume_views_auth_github_login",
+        "summary": "Github Login",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserSchema" }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SocialLoginSchema" }
+            }
+          },
+          "required": true
+        }
+      }
+    },
     "/api/auth/log-out": {
       "post": {
         "operationId": "resume_views_auth_log_out",

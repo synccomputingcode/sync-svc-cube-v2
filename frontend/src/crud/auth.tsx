@@ -1,8 +1,24 @@
 import { useMutation } from "react-query";
 import { ApiClient } from "../api";
 import { ResponseError, UserSchema } from "../api-client";
+import { useCallback, useContext } from "react";
+import { AuthContext } from "../components/context/auth";
+import { useNavigate } from "react-router-dom";
+
+const useOnLogin = () => {
+  const { login } = useContext(AuthContext);
+  const navigate = useNavigate();
+  return useCallback(
+    (data: UserSchema) => {
+      login(data);
+      navigate("/", { replace: true });
+    },
+    [navigate, login],
+  );
+};
 
 export const useGoogleLoginMutation = () => {
+  const loginCallback = useOnLogin();
   return useMutation<UserSchema, ResponseError, string>(
     (accessToken: string) => {
       return ApiClient.resumeViewsAuthGoogleLogin({
@@ -10,6 +26,25 @@ export const useGoogleLoginMutation = () => {
           accessToken,
         },
       });
+    },
+    {
+      onSuccess: loginCallback,
+    },
+  );
+};
+
+export const useGithubLoginMutation = () => {
+  const loginCallback = useOnLogin();
+  return useMutation<UserSchema, ResponseError, string>(
+    (accessToken: string) => {
+      return ApiClient.resumeViewsAuthGithubLogin({
+        socialLoginSchema: {
+          accessToken,
+        },
+      });
+    },
+    {
+      onSuccess: loginCallback,
     },
   );
 };

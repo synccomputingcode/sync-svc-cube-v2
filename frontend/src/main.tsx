@@ -10,6 +10,7 @@ import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { LoginView } from "./routes/Login/index.tsx";
 import { HomeView } from "./routes/Home/index.tsx";
 import { ProtectedRoute } from "./routes/protected.tsx";
+import { GithubCallback } from "./routes/Login/GithubAuth.tsx";
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
@@ -20,6 +21,10 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <LoginView />,
+      },
+      {
+        path: "/github/callback",
+        element: <GithubCallback />,
       },
       {
         path: "/protected",

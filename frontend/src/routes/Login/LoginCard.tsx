@@ -1,6 +1,7 @@
 import { Card, CardContent, Divider, Stack, Typography } from "@mui/material";
 import React from "react";
 import { GoogleAuth } from "./GoogleAuth";
+import { GithubAuth } from "./GithubAuth";
 export const LoginCard = (): React.ReactElement => {
   return (
     <Card elevation={10}>
@@ -14,6 +15,7 @@ export const LoginCard = (): React.ReactElement => {
           </Typography>
           <Divider />
           <GoogleAuth />
+          <GithubAuth />
         </Stack>
       </CardContent>
     </Card>

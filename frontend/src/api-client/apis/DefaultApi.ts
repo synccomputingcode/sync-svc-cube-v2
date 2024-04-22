@@ -28,6 +28,10 @@ import {
     UserSchemaToJSON,
 } from '../models/index';
 
+export interface ResumeViewsAuthGithubLoginRequest {
+    socialLoginSchema: SocialLoginSchema;
+}
+
 export interface ResumeViewsAuthGoogleLoginRequest {
     socialLoginSchema: SocialLoginSchema;
 }
@@ -60,6 +64,42 @@ export class DefaultApi extends runtime.BaseAPI {
      */
     async resumeApiHello(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<HealthCheckSchema> {
         const response = await this.resumeApiHelloRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Github Login
+     */
+    async resumeViewsAuthGithubLoginRaw(requestParameters: ResumeViewsAuthGithubLoginRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UserSchema>> {
+        if (requestParameters['socialLoginSchema'] == null) {
+            throw new runtime.RequiredError(
+                'socialLoginSchema',
+                'Required parameter "socialLoginSchema" was null or undefined when calling resumeViewsAuthGithubLogin().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/api/auth/github-login`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: SocialLoginSchemaToJSON(requestParameters['socialLoginSchema']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => UserSchemaFromJSON(jsonValue));
+    }
+
+    /**
+     * Github Login
+     */
+    async resumeViewsAuthGithubLogin(requestParameters: ResumeViewsAuthGithubLoginRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UserSchema> {
+        const response = await this.resumeViewsAuthGithubLoginRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
