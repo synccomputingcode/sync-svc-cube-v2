@@ -1,20 +1,16 @@
-import { Paper, Stack, Typography } from "@mui/material";
+import { Stack, Typography } from "@mui/material";
 import Grid2 from "@mui/material/Unstable_Grid2/Grid2";
 import { GetInTouchCard } from "./GetInTouchCard";
 import { LoginCard } from "./LoginCard";
 import { useContext } from "react";
 import { AuthContext } from "../../components/context/auth";
 import { AuthenticatedCard } from "./AuthenticatedCard";
+import { SkyBox } from "../../components/SkyBox";
 
 export const LoginView = (): React.ReactElement => {
   const { user } = useContext(AuthContext);
   return (
-    <Paper
-      sx={{
-        background: (theme) => theme.palette.gradient.default,
-        minHeight: "100dvh",
-      }}
-    >
+    <SkyBox>
       <Grid2
         container
         sx={{ paddingTop: { xs: "50px", sm: "120px" }, margin: 0 }}
@@ -63,6 +59,6 @@ export const LoginView = (): React.ReactElement => {
           </Stack>
         </Grid2>
       </Grid2>
-    </Paper>
+    </SkyBox>
   );
 };
