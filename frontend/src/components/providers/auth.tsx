@@ -2,6 +2,7 @@ import { useLogoutMutation } from "../../crud/auth";
 import { useCallback, useMemo, useState } from "react";
 import { UserSchema } from "../../api-client";
 import { AuthContext } from "../context/auth";
+import { datadogRum } from "@datadog/browser-rum";
 
 type AuthProviderProps = {
   children: React.ReactNode;
@@ -13,6 +14,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const login = useCallback(
     (user: UserSchema) => {
+      datadogRum.setUser({
+        id: user.id.toString(),
+        email: user.email,
+        name: user.firstName + " " + user.lastName,
+      });
       setUser(user);
     },
     [setUser],

@@ -21,6 +21,12 @@ import { mapValues } from '../runtime';
 export interface UserSchema {
     /**
      * 
+     * @type {number}
+     * @memberof UserSchema
+     */
+    id: number;
+    /**
+     * 
      * @type {string}
      * @memberof UserSchema
      */
@@ -49,6 +55,7 @@ export interface UserSchema {
  * Check if a given object implements the UserSchema interface.
  */
 export function instanceOfUserSchema(value: object): boolean {
+    if (!('id' in value)) return false;
     if (!('firstName' in value)) return false;
     if (!('lastName' in value)) return false;
     if (!('email' in value)) return false;
@@ -65,6 +72,7 @@ export function UserSchemaFromJSONTyped(json: any, ignoreDiscriminator: boolean)
     }
     return {
         
+        'id': json['id'],
         'firstName': json['first_name'],
         'lastName': json['last_name'],
         'email': json['email'],
@@ -78,6 +86,7 @@ export function UserSchemaToJSON(value?: UserSchema | null): any {
     }
     return {
         
+        'id': value['id'],
         'first_name': value['firstName'],
         'last_name': value['lastName'],
         'email': value['email'],
