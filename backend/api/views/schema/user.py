@@ -5,7 +5,7 @@ class UserSchema(Schema):
     first_name: str
     last_name: str
     email: str
-    avatar_url: str
+    avatar_url: str | None = None
 
     @staticmethod
     def resolve_avatar_url(obj):
