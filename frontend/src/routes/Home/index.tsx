@@ -113,6 +113,9 @@ export const HomeView = (): React.ReactElement => {
       <Typography variant="subtitle1" sx={{ fontWeight: "500" }}>
         This little demo site is intended as a simple showcase of skills.
       </Typography>
+      <Typography variant="subtitle1" sx={{ fontWeight: "500" }}>
+        Have a look at the source code to see how {"it's"} done!
+      </Typography>
       <Divider />
       <Grid2 container spacing={2}>
         <Grid2 xs={4} sx={{ minWidth: "450px" }}>
