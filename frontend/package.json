@@ -12,6 +12,7 @@
     "autogen-client": "python ../backend/manage.py export_openapi_schema --output spec.json && prettier spec.json --write && rm -rf ./src/api-client && openapi-generator-cli generate"
   },
   "dependencies": {
+    "@datadog/browser-rum": "^5.16.0",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
     "@fontsource/roboto": "^5.0.12",

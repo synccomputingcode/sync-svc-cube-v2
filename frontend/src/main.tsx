@@ -13,6 +13,9 @@ import { AuthenticatedRoute } from "./routes/protected.tsx";
 import { GithubCallback } from "./routes/Login/GithubAuth.tsx";
 import { URLS } from "./urls.ts";
 import { MainLayout } from "./layouts/Main.tsx";
+import { initAnalytics } from "./analytics.ts";
+
+initAnalytics();
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
