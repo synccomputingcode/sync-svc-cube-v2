@@ -166,6 +166,7 @@ export const SkyBox = ({ children }: SkyBoxProps) => {
             height: paperRef?.clientHeight || 0,
             backgroundImage: gradient.gradient,
             backgroundRepeat: "no-repeat",
+            filter: "blur(1px)",
             opacity: sun.gradient[i].opacity,
             zIndex: -1,
           }}
@@ -181,6 +182,7 @@ export const SkyBox = ({ children }: SkyBoxProps) => {
           height: paperRef?.clientHeight || 0,
           backgroundRepeat: "no-repeat",
           zIndex: -2,
+          filter: "blur(2px)",
           backgroundImage:
             "linear-gradient(to top, rgba(249,251,240,1) 1%, rgba(215,253,254,1) 10%, rgba(167,222,253,1) 40%, rgba(110,175,255,1) 100%)",
           opacity: daySkyOpacity,
