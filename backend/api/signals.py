@@ -1,11 +1,21 @@
 # django signals
 # https://docs.djangoproject.com/en/3.2/topics/signals/
+from allauth.account.signals import user_signed_up
 from allauth.socialaccount.models import SocialLogin
-from allauth.socialaccount.signals import social_account_added
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+from api.models.user import ProfileModel
 
-@receiver(social_account_added)
+
+@receiver(post_save, sender=User)
+def create_profile(sender, instance, created, **kwargs):
+    if created:
+        ProfileModel.objects.create(user=instance)
+
+
+@receiver([user_signed_up])
 def social_account_added_callback(request, sociallogin: SocialLogin, **kwargs):
     if sociallogin.account.provider == "github":
         user_profile = sociallogin.user.profile
