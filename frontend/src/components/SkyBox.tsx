@@ -1,5 +1,5 @@
 import { Box, Paper } from "@mui/material";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getTimes, GetTimesResult } from "suncalc";
 
 const SunGradientColors = {
@@ -49,6 +49,7 @@ const getCelestialXY = (
     y: height + radius * Math.sin(angle),
   };
 };
+
 const useCelestialPositions = (time: Date, width: number, height: number) => {
   const latitude = 0;
   const longitude = time.getTimezoneOffset() / 4;
@@ -94,10 +95,10 @@ const useDateTime = (timeMultiplier = 1) => {
   useEffect(() => {
     const intervalId = setInterval(() => {
       setDateTime((prevDateTime) => {
-        const elapsedTime = 50 * timeMultiplier;
+        const elapsedTime = 100 * timeMultiplier;
         return new Date(prevDateTime.getTime() + elapsedTime);
       });
-    }, 50);
+    }, 100);
 
     return () => {
       clearInterval(intervalId);
@@ -107,13 +108,28 @@ const useDateTime = (timeMultiplier = 1) => {
   return dateTime;
 };
 
+const createStars = (count: number, width: number, height: number) => {
+  console.log(width, height);
+  const stars = [];
+  for (let i = 0; i < count; i++) {
+    const x = Math.random() * width;
+    const y = Math.random() * height;
+    const size = 2;
+    stars.push({
+      x,
+      y,
+      size,
+    });
+  }
+  return stars;
+};
 export const SkyBox = ({ children }: SkyBoxProps) => {
-  const paperRef = useRef<HTMLDivElement>(null);
-  const now = useDateTime(5000);
+  const [paperRef, setPaperRef] = useState<HTMLDivElement | null>(null);
+  const now = useDateTime(1500);
   const sun = useCelestialPositions(
     now,
-    paperRef.current?.clientWidth || 0,
-    paperRef.current?.clientHeight || 0,
+    paperRef?.clientWidth || 0,
+    paperRef?.clientHeight || 0,
   );
   const calculateDaySkyOpacity = (sunY: number, height: number) => {
     const normalizedY = (height - sunY) / height;
@@ -122,27 +138,18 @@ export const SkyBox = ({ children }: SkyBoxProps) => {
   };
   const daySkyOpacity = calculateDaySkyOpacity(
     sun.y,
-    paperRef.current?.clientHeight || 0,
+    paperRef?.clientHeight || 0,
   );
-  const createStars = (count: number) => {
-    const stars = [];
-    for (let i = 0; i < count; i++) {
-      const x = Math.random() * (paperRef.current?.clientWidth || 0);
-      const y = Math.random() * (paperRef.current?.clientHeight || 0);
-      const size = 2;
-      stars.push({
-        x,
-        y,
-        size,
-      });
-    }
-    return stars;
-  };
   const nightSkyOpacity = 1 - daySkyOpacity;
-  const stars = useMemo(() => createStars(100), []);
+  const stars = useMemo(() => {
+    if (!paperRef) {
+      return [];
+    }
+    return createStars(100, paperRef.clientWidth, paperRef.clientHeight);
+  }, [paperRef]);
   return (
     <Paper
-      ref={paperRef}
+      ref={setPaperRef}
       sx={{
         minHeight: "100dvh",
         backgroundColor: "transparent",
@@ -155,8 +162,8 @@ export const SkyBox = ({ children }: SkyBoxProps) => {
             position: "absolute",
             top: 0,
             left: 0,
-            width: paperRef.current?.clientWidth || 0,
-            height: paperRef.current?.clientHeight || 0,
+            width: paperRef?.clientWidth || 0,
+            height: paperRef?.clientHeight || 0,
             backgroundImage: gradient.gradient,
             backgroundRepeat: "no-repeat",
             opacity: sun.gradient[i].opacity,
@@ -170,8 +177,8 @@ export const SkyBox = ({ children }: SkyBoxProps) => {
           position: "absolute",
           top: 0,
           left: 0,
-          width: paperRef.current?.clientWidth || 0,
-          height: paperRef.current?.clientHeight || 0,
+          width: paperRef?.clientWidth || 0,
+          height: paperRef?.clientHeight || 0,
           backgroundRepeat: "no-repeat",
           zIndex: -2,
           backgroundImage:
@@ -179,15 +186,14 @@ export const SkyBox = ({ children }: SkyBoxProps) => {
           opacity: daySkyOpacity,
         }}
       />
-
       <Box
         id="nightSky"
         sx={{
           position: "absolute",
           top: 0,
           left: 0,
-          width: paperRef.current?.clientWidth || 0,
-          height: paperRef.current?.clientHeight || 0,
+          width: paperRef?.clientWidth || 0,
+          height: paperRef?.clientHeight || 0,
           backgroundRepeat: "no-repeat",
           zIndex: -2,
           backgroundImage:
@@ -206,7 +212,7 @@ export const SkyBox = ({ children }: SkyBoxProps) => {
               height: star.size,
               backgroundColor: "white",
               borderRadius: "50%",
-              opacity: 1 - star.y / (paperRef.current?.clientHeight || 0),
+              opacity: 1 - star.y / (paperRef?.clientHeight || 0),
             }}
           />
         ))}
