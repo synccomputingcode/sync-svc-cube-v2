@@ -8,7 +8,7 @@ export const initAnalytics = () => {
     service: "resume",
     env: import.meta.env.MODE,
     sessionSampleRate: 100,
-    sessionReplaySampleRate: 20,
+    sessionReplaySampleRate: 100,
     trackUserInteractions: true,
     trackResources: true,
     trackLongTasks: true,
