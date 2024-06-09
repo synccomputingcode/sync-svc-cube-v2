@@ -1,16 +1,17 @@
 import { Stack, Typography } from "@mui/material";
 import Grid2 from "@mui/material/Unstable_Grid2/Grid2";
 import { GetInTouchCard } from "./GetInTouchCard";
-import { LoginCard } from "./LoginCard";
-import { useContext } from "react";
-import { AuthContext } from "../../components/context/auth";
-import { AuthenticatedCard } from "./AuthenticatedCard";
-import { SkyBox } from "../../components/SkyBox";
+// import { LoginCard } from "./LoginCard";
+// import { useContext } from "react";
+// import { AuthContext } from "../../components/context/auth";
+// import { AuthenticatedCard } from "./AuthenticatedCard";
+// import { SkyBox } from "../../components/SkyBox";
+import { Pride } from "../../components/Pride";
 
 export const LoginView = (): React.ReactElement => {
-  const { user } = useContext(AuthContext);
+  // const { user } = useContext(AuthContext);
   return (
-    <SkyBox>
+    <Pride>
       <Grid2
         container
         sx={{ paddingTop: { xs: "50px", sm: "120px" }, margin: 0 }}
@@ -55,10 +56,10 @@ export const LoginView = (): React.ReactElement => {
         >
           <Stack spacing={2}>
             <GetInTouchCard />
-            {user ? <AuthenticatedCard /> : <LoginCard />}
+            {/* {user ? <AuthenticatedCard /> : <LoginCard />} */}
           </Stack>
         </Grid2>
       </Grid2>
-    </SkyBox>
+    </Pride>
   );
 };
