@@ -8,7 +8,7 @@
         "generatorName": "typescript-fetch",
         "inputSpec": "./spec.json",
         "output": "./src/api-client",
-        "packageName": "coiled-api"
+        "packageName": "api"
       }
     }
   }
