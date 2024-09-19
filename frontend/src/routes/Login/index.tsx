@@ -5,13 +5,13 @@ import { GetInTouchCard } from "./GetInTouchCard";
 // import { useContext } from "react";
 // import { AuthContext } from "../../components/context/auth";
 // import { AuthenticatedCard } from "./AuthenticatedCard";
-// import { SkyBox } from "../../components/SkyBox";
-import { Pride } from "../../components/Pride";
+import { SkyBox } from "../../components/SkyBox";
+// import { Pride } from "../../components/Pride";
 
 export const LoginView = (): React.ReactElement => {
   // const { user } = useContext(AuthContext);
   return (
-    <Pride>
+    <SkyBox>
       <Grid2
         container
         sx={{ paddingTop: { xs: "50px", sm: "120px" }, margin: 0 }}
@@ -60,6 +60,6 @@ export const LoginView = (): React.ReactElement => {
           </Stack>
         </Grid2>
       </Grid2>
-    </Pride>
+    </SkyBox>
   );
 };
