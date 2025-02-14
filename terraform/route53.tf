@@ -1,7 +1,7 @@
 
 locals {
-  domain_name     = "samanthahughes.me"
-  api_domain_name = "api.${local.domain_name}"
+  domain_name     = "synccomputing.com"
+  api_domain_name = "query-api.${local.domain_name}"
 }
 
 data "aws_route53_zone" "main" {

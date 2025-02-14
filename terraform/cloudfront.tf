@@ -16,7 +16,7 @@ data "aws_cloudfront_origin_request_policy" "all_viewers" {
 
 
 
-module "resume_cdn" {
+module "sync-svc-cube_cdn" {
   source              = "terraform-aws-modules/cloudfront/aws"
   version             = "3.4.0"
   aliases             = [local.domain_name, "www.${local.domain_name}"]

@@ -1,8 +1,8 @@
 terraform {
   cloud {
-    organization = "shughesuk"
+    organization = "synccomputing"
     workspaces {
-      name = "resume-workspace"
+      name = "sync-svc-cube"
     }
 
   }
@@ -12,4 +12,11 @@ terraform {
     }
   }
   required_version = ">= 1.2.0"
+
+  backend "s3" {
+    bucket                  = "sync-terraform-s3-state"
+    key                     = "sync-svc-cube"
+    region                  = "us-east-1"
+    shared_credentials_file = "~/.aws/credentials"
+  }
 }

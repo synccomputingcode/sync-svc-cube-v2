@@ -16,7 +16,7 @@ resource "aws_lb_target_group" "main" {
   deregistration_delay = 5
 
   health_check {
-    path              = "/api/healthcheck"
+    path              = "/readyz"
     healthy_threshold = 2
     interval          = 15
   }
