@@ -107,8 +107,8 @@ locals {
           value = "https://${local.api_domain_name},https://${local.domain_name}"
         },
         {
-          name="CSRF_COOKIE_DOMAIN"
-          value=".${local.domain_name}"
+          name  = "CSRF_COOKIE_DOMAIN"
+          value = ".${local.domain_name}"
         },
         {
           name  = "DB_HOST"
@@ -163,9 +163,8 @@ resource "aws_ecs_service" "main" {
   deployment_minimum_healthy_percent = 0
 
   network_configuration {
-    subnets          = module.vpc.public_subnets
-    security_groups  = [aws_security_group.ecs_service.id]
-    assign_public_ip = true
+    subnets         = module.vpc.private_subnets
+    security_groups = [aws_security_group.ecs_service.id]
   }
 
   load_balancer {

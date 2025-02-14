@@ -76,8 +76,8 @@ resource "aws_route53_record" "main" {
   name    = local.domain_name
   type    = "A"
   alias {
-    name                   = module.resume_cdn.cloudfront_distribution_domain_name
-    zone_id                = module.resume_cdn.cloudfront_distribution_hosted_zone_id
+    name                   = module.sync_svc_cube_cdn.cloudfront_distribution_domain_name
+    zone_id                = module.sync_svc_cube_cdn.cloudfront_distribution_hosted_zone_id
     evaluate_target_health = false
   }
 }
@@ -87,8 +87,8 @@ resource "aws_route53_record" "www" {
   name    = "www.${local.domain_name}"
   type    = "A"
   alias {
-    name                   = module.resume_cdn.cloudfront_distribution_domain_name
-    zone_id                = module.resume_cdn.cloudfront_distribution_hosted_zone_id
+    name                   = module.sync_svc_cube_cdn.cloudfront_distribution_domain_name
+    zone_id                = module.sync_svc_cube_cdn.cloudfront_distribution_hosted_zone_id
     evaluate_target_health = false
   }
 }
