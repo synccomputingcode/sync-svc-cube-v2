@@ -23,8 +23,8 @@ data "aws_iam_policy_document" "ecs_task_execution_role" {
   statement {
     actions = ["secretsmanager:GetSecretValue"]
     resources = [
-      aws_db_instance.main.master_user_secret.0.secret_arn,
-      aws_secretsmanager_secret.django_secret_key.arn
+      aws_secretsmanager_secret.postgres_cube_user_pw.arn,
+      aws_secretsmanager_secret.auth0_jwt_key.arn
     ]
   }
 }
@@ -43,42 +43,118 @@ resource "aws_iam_role" "ecs_task_execution_role" {
       },
     ],
   })
-
-  inline_policy {
-    name   = "ecs_task_execution_role_get_secret"
-    policy = data.aws_iam_policy_document.ecs_task_execution_role.json
-  }
-
-  managed_policy_arns = [
-    "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
-  ]
 }
 
-resource "aws_secretsmanager_secret" "django_secret_key" {
-  name = "production-django-secret-key"
+resource "aws_iam_policy" "ecs_task_execution_role_policy" {
+  name        = "ecs_task_execution_role_policy"
+  description = "Policy for ECS Task Execution Role to get secrets"
+  policy      = data.aws_iam_policy_document.ecs_task_execution_role.json
 }
 
-resource "aws_secretsmanager_secret_version" "django_secret_key" {
-  secret_id     = aws_secretsmanager_secret.django_secret_key.id
-  secret_string = data.aws_secretsmanager_random_password.django_secret_key.random_password
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_attach" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = aws_iam_policy.ecs_task_execution_role_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_managed" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+
+resource "aws_secretsmanager_secret" "postgres_cube_user_pw" {
+  name = "production-postgres-cube-user-pw"
+}
+
+resource "aws_secretsmanager_secret_version" "postgres_cube_user_pw" {
+  secret_id = aws_secretsmanager_secret.postgres_cube_user_pw.id
 
   lifecycle {
     ignore_changes = [secret_string]
   }
 }
 
-data "aws_secretsmanager_random_password" "django_secret_key" {
-  password_length     = 50
-  include_space       = false
-  exclude_punctuation = true
+resource "aws_secretsmanager_secret" "auth0_jwt_key" {
+  name = "production-auth0-jwt-key"
+}
+
+resource "aws_secretsmanager_secret_version" "auth0_jwt_key" {
+  secret_id = aws_secretsmanager_secret.auth0_jwt_key.id
+
+  lifecycle {
+    ignore_changes = [secret_string]
+  }
 }
 
 
+
 locals {
+  cube_shared_environment = [
+    {
+      name  = "CUBEJS_DB_SSL"
+      value = "true"
+    },
+    {
+      name  = "CUBEJS_DB_TYPE"
+      value = "postgres"
+    },
+    {
+      name  = "CUBEJS_DB_TYPE"
+      value = "postgres"
+    },
+    {
+      name  = "CUBEJS_DB_TYPE"
+      value = "postgres"
+    },
+    {
+      name  = "CUBEJS_DB_USER"
+      value = "cube"
+    },
+    {
+      name  = "CUBEJS_DB_NAME"
+      value = "d20nhfliefb6aa"
+    },
+    {
+      name  = "CUBEJS_SCHEMA_PATH"
+      value = "model"
+    },
+    {
+      name  = "CUBEJS_DEV_MODE"
+      value = "true"
+    },
+    {
+      name  = "NODE_ENV",
+      value = "production"
+    },
+    {
+      name  = "CUBEJS_JWK_URL"
+      value = "https://sync-prod.us.auth0.com/.well-known/jwks.json"
+    },
+    {
+      name  = "CUBEJS_JWT_AUDIENCE"
+      value = "https://api.synccomputing.com"
+    },
+    {
+      name  = "CUBEJS_JWT_ISSUER"
+      value = "https://login.app.synccomputing.com/"
+    },
+    {
+      name  = "CUBEJS_JWT_ALGS"
+      value = "RS256"
+    },
+    {
+      name  = "CUBEJS_JWT_CLAIMS_NAMESPACE"
+      value = "https://synccomputing.com/"
+    }
+  ]
+  cube_shared_secrets = [
+    { name = "CUBEJS_DB_PASS", valueFrom = aws_secretsmanager_secret.postgres_cube_user_pw.arn },
+    { name = "CUBEJS_JWT_KEY", valueFrom = aws_secretsmanager_secret.auth0_jwt_key.arn },
+  ]
   container_definitions = jsonencode([
     {
-      name      = "backend-api"
-      image     = "${var.app_image}"
+      name      = "cube-api"
+      image     = "${var.cube_image}"
       cpu       = 256
       memory    = 512
       essential = true
@@ -97,46 +173,42 @@ locals {
           protocol      = "tcp",
         },
       ],
-      environment = [
+      environment = concat(local.cube_shared_environment,
         {
-          name  = "ALLOWED_HOSTS"
-          value = "${local.api_domain_name},${local.domain_name}"
+          name  = "CUBEJS_REFRESH_WORKER"
+          value = "false"
         },
+      ),
+      secrets = local.cube_shared_secrets
+    },
+    {
+      name      = "cube-refresh-worker"
+      image     = "${var.cube_image}"
+      cpu       = 256
+      memory    = 512
+      essential = true
+      logConfiguration = {
+        "logDriver" : "awslogs",
+        "options" : {
+          "awslogs-group" : aws_cloudwatch_log_group.main.name,
+          "awslogs-region" : "us-east-1",
+          "awslogs-stream-prefix" : "ecs"
+        }
+      }
+      portMappings = [
         {
-          name  = "CORS_ALLOWED_ORIGINS"
-          value = "https://${local.api_domain_name},https://${local.domain_name}"
-        },
-        {
-          name  = "CSRF_COOKIE_DOMAIN"
-          value = ".${local.domain_name}"
-        },
-        {
-          name  = "DB_HOST"
-          value = aws_db_instance.main.address
-        },
-        {
-          name  = "DB_PORT"
-          value = tostring(aws_db_instance.main.port)
-        },
-        {
-          name  = "DB_NAME"
-          value = aws_db_instance.main.db_name
-        },
-        {
-          name  = "DB_USER"
-          value = aws_db_instance.main.username
+          containerPort = 80,
+          hostPort      = 80,
+          protocol      = "tcp",
         },
       ],
-      secrets = [
+      environment = concat(local.cube_shared_environment,
         {
-          name      = "DB_PASSWORD"
-          valueFrom = "${aws_db_instance.main.master_user_secret.0.secret_arn}:password::"
+          name  = "CUBEJS_REFRESH_WORKER"
+          value = "true"
         },
-        {
-          name      = "SECRET_KEY"
-          valueFrom = aws_secretsmanager_secret.django_secret_key.arn
-        },
-      ]
+      ),
+      secrets = local.cube_shared_secrets
     },
   ])
 }
@@ -169,7 +241,7 @@ resource "aws_ecs_service" "main" {
 
   load_balancer {
     target_group_arn = aws_lb_target_group.main.arn
-    container_name   = "backend-api"
+    container_name   = "cube-api"
     container_port   = 80
   }
 }
