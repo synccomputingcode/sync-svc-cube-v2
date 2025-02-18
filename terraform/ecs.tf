@@ -151,7 +151,7 @@ locals {
     { name = "CUBEJS_DB_PASS", valueFrom = aws_secretsmanager_secret.postgres_cube_user_pw.arn },
     { name = "CUBEJS_JWT_KEY", valueFrom = aws_secretsmanager_secret.auth0_jwt_key.arn },
   ]
-  container_definitions = jsonencode([
+  cube_api_container_definitions = jsonencode([
     {
       name      = "cube-api"
       image     = "${var.cube_image}"
@@ -180,7 +180,10 @@ locals {
         },
       ),
       secrets = local.cube_shared_secrets
-    },
+    }
+  ])
+
+  cube_refresh_worker_container_definitions = jsonencode([
     {
       name      = "cube-refresh-worker"
       image     = "${var.cube_image}"
@@ -209,13 +212,101 @@ locals {
         },
       ),
       secrets = local.cube_shared_secrets
+    }
+  ])
+
+  cubestore_router_container_definitions = jsonencode([
+    {
+      name      = "cubestore-router"
+      image     = "${var.cubestore_image}"
+      cpu       = 256
+      memory    = 512
+      essential = true
+      logConfiguration = {
+        "logDriver" : "awslogs",
+        "options" : {
+          "awslogs-group" : aws_cloudwatch_log_group.main.name,
+          "awslogs-region" : "us-east-1",
+          "awslogs-stream-prefix" : "ecs"
+        }
+      }
+      portMappings = [
+        {
+          containerPort = 80,
+          hostPort      = 80,
+          protocol      = "tcp",
+        },
+      ],
+      environment = concat(local.cube_shared_environment,
+        {
+          name  = "CUBESTORE_SERVER_NAME"
+          value = "${aws_lb.cubestore_router.dns_name}:${aws_lb.cubestore_router.port}"
+        },
+        {
+          name  = "CUBESTORE_META_PORT"
+          value = "${aws_lb.cubestore_router.port}"
+        },
+        {
+          name  = "CUBESTORE_WORKERS"
+          value = "${aws_lb.cubestore.dns_name}:${aws_lb.cubestore.port}"
+        },
+        {
+          name  = "CUBESTORE_REMOTE_DIR"
+          value = "/cube/data"
+        },
+      ),
+      secrets = local.cube_shared_secrets
     },
+  ])
+
+  cubestore_container_definitions = jsonencode([
+    {
+      name      = "cubestore"
+      image     = "${var.cubestore_image}"
+      cpu       = 256
+      memory    = 512
+      essential = true
+      logConfiguration = {
+        "logDriver" : "awslogs",
+        "options" : {
+          "awslogs-group" : aws_cloudwatch_log_group.main.name,
+          "awslogs-region" : "us-east-1",
+          "awslogs-stream-prefix" : "ecs"
+        }
+      }
+      portMappings = [
+        {
+          containerPort = 80,
+          hostPort      = 80,
+          protocol      = "tcp",
+        },
+      ],
+      environment = concat(local.cube_shared_environment,
+        {
+          name  = "CUBESTORE_WORKER_PORT"
+          value = "80"
+        },
+        {
+          name  = "CUBESTORE_META_ADDR"
+          value = "${aws_lb.cubestore_router.dns_name}:${aws_lb.cubestore_router.port}"
+        },
+        {
+          name  = "CUBESTORE_WORKERS"
+          value = "${aws_lb.cubestore.dns_name}:${aws_lb.cubestore.port}"
+        },
+        {
+          name  = "CUBESTORE_REMOTE_DIR"
+          value = "/cube/data"
+        },
+      ),
+      secrets = local.cube_shared_secrets
+    }
   ])
 }
 
-resource "aws_ecs_task_definition" "main" {
+resource "aws_ecs_task_definition" "cube_api" {
   family                   = "production"
-  container_definitions    = local.container_definitions
+  container_definitions    = local.cube_api_container_definitions
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
@@ -223,10 +314,10 @@ resource "aws_ecs_task_definition" "main" {
   memory                   = "512"
 }
 
-resource "aws_ecs_service" "main" {
+resource "aws_ecs_service" "cube_api" {
   name                  = "production"
   cluster               = aws_ecs_cluster.main.id
-  task_definition       = aws_ecs_task_definition.main.arn
+  task_definition       = aws_ecs_task_definition.cube_api.arn
   desired_count         = 1
   launch_type           = "FARGATE"
   wait_for_steady_state = true
@@ -245,3 +336,92 @@ resource "aws_ecs_service" "main" {
     container_port   = 80
   }
 }
+
+resource "aws_ecs_task_definition" "cube_refresh_worker" {
+  family                   = "production"
+  container_definitions    = local.cube_refresh_worker_container_definitions
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+}
+
+resource "aws_ecs_service" "cube_refresh_worker" {
+  name                  = "production"
+  cluster               = aws_ecs_cluster.main.id
+  task_definition       = aws_ecs_task_definition.cube_refresh_worker.arn
+  desired_count         = 1
+  launch_type           = "FARGATE"
+  wait_for_steady_state = true
+
+  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 0
+}
+
+resource "aws_ecs_service" "cubestore_router" {
+  name                  = "production"
+  cluster               = aws_ecs_cluster.main.id
+  task_definition       = aws_ecs_task_definition.cubestore_router.arn
+  desired_count         = 1
+  launch_type           = "FARGATE"
+  wait_for_steady_state = true
+
+  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 0
+
+  network_configuration {
+    subnets         = module.vpc.private_subnets
+    security_groups = [aws_security_group.ecs_service.id]
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.cubestore_router.arn
+    container_name   = "cubestore_router"
+    container_port   = 80
+  }
+}
+
+resource "aws_ecs_task_definition" "cubestore_router" {
+  family                   = "production"
+  container_definitions    = local.cubestore_router_container_definitions
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+}
+
+resource "aws_ecs_service" "cubestore" {
+  name                  = "production"
+  cluster               = aws_ecs_cluster.main.id
+  task_definition       = aws_ecs_task_definition.cubestore.arn
+  desired_count         = 1
+  launch_type           = "FARGATE"
+  wait_for_steady_state = true
+
+  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 0
+
+  network_configuration {
+    subnets         = module.vpc.private_subnets
+    security_groups = [aws_security_group.ecs_service.id]
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.cubestore.arn
+    container_name   = "cubestore"
+    container_port   = 80
+  }
+}
+
+resource "aws_ecs_task_definition" "cubestore" {
+  family                   = "production"
+  container_definitions    = local.cubestore_container_definitions
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+}
+

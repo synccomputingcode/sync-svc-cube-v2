@@ -7,4 +7,5 @@ variable "cube_image" {
 variable "cubestore_image" {
   type        = string
   description = "Image for cube store and cube store router"
+  default     = "cubejs/cubestore"
 }
