@@ -259,6 +259,8 @@ locals {
     },
   ])
 
+  cubestore_task_dns_names = join(",", [for i in range(var.cubestore_worker_count) : "cubestore-${i}.${aws_service_discovery_private_dns_namespace.cubestore.name}"])
+
   cubestore_container_definitions = jsonencode([
     {
       name      = "cubestore"
@@ -292,7 +294,7 @@ locals {
         },
         {
           name  = "CUBESTORE_WORKERS"
-          value = "${aws_lb.cubestore.dns_name}:${aws_lb.cubestore.port}"
+          value = "${local.cubestore_task_dns_names}"
         },
         {
           name  = "CUBESTORE_REMOTE_DIR"
@@ -392,11 +394,42 @@ resource "aws_ecs_task_definition" "cubestore_router" {
   memory                   = "512"
 }
 
+variable "cubestore_worker_count" {
+  default = 2
+}
+
+resource "aws_service_discovery_private_dns_namespace" "cubestore_namespace" {
+  name = "cubestore.local"
+  vpc  = aws_vpc.my_vpc.id
+}
+
+resource "aws_service_discovery_service" "cubestore" {
+  count = var.cubestore_worker_count
+  name  = "cubestore-${count.index}"
+
+  dns_config {
+    namespace_id = aws_service_discovery_private_dns_namespace.cubestore.id
+
+    dns_records {
+      ttl  = 10
+      type = "SRV"
+    }
+
+    routing_policy = "MULTIVALUE"
+  }
+
+  health_check_custom_config {
+    failure_threshold = 1
+  }
+}
+
 resource "aws_ecs_service" "cubestore" {
-  name                  = "production"
+  count = var.cubestore_worker_count
+
+  name                  = "cubestore-service-${count.index}"
   cluster               = aws_ecs_cluster.main.id
   task_definition       = aws_ecs_task_definition.cubestore.arn
-  desired_count         = 2
+  desired_count         = 1
   launch_type           = "FARGATE"
   wait_for_steady_state = true
 
@@ -404,14 +437,13 @@ resource "aws_ecs_service" "cubestore" {
   deployment_minimum_healthy_percent = 0
 
   network_configuration {
-    subnets         = module.vpc.private_subnets
-    security_groups = [aws_security_group.ecs_service.id]
+    subnets          = module.vpc.private_subnets
+    security_groups  = [aws_security_group.ecs_service.id]
+    assign_public_ip = true
   }
 
-  load_balancer {
-    target_group_arn = aws_lb_target_group.cubestore.arn
-    container_name   = "cubestore"
-    container_port   = 80
+  service_registries {
+    registry_arn = aws_service_discovery_service.cubestore[count.index].arn
   }
 }
 
