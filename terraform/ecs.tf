@@ -307,7 +307,7 @@ locals {
 }
 
 resource "aws_ecs_task_definition" "cube_api" {
-  family                   = "production"
+  family                   = "cube_api"
   container_definitions    = local.cube_api_container_definitions
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   network_mode             = "awsvpc"
@@ -317,7 +317,7 @@ resource "aws_ecs_task_definition" "cube_api" {
 }
 
 resource "aws_ecs_service" "cube_api" {
-  name                  = "production"
+  name                  = "cube_api"
   cluster               = aws_ecs_cluster.main.id
   task_definition       = aws_ecs_task_definition.cube_api.arn
   desired_count         = 1
@@ -340,7 +340,7 @@ resource "aws_ecs_service" "cube_api" {
 }
 
 resource "aws_ecs_task_definition" "cube_refresh_worker" {
-  family                   = "production"
+  family                   = "cube_refresh_worker"
   container_definitions    = local.cube_refresh_worker_container_definitions
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   network_mode             = "awsvpc"
@@ -350,7 +350,7 @@ resource "aws_ecs_task_definition" "cube_refresh_worker" {
 }
 
 resource "aws_ecs_service" "cube_refresh_worker" {
-  name                  = "production"
+  name                  = "cube_refresh_worker"
   cluster               = aws_ecs_cluster.main.id
   task_definition       = aws_ecs_task_definition.cube_refresh_worker.arn
   desired_count         = 1
@@ -362,7 +362,7 @@ resource "aws_ecs_service" "cube_refresh_worker" {
 }
 
 resource "aws_ecs_service" "cubestore_router" {
-  name                  = "production"
+  name                  = "cubestore_router"
   cluster               = aws_ecs_cluster.main.id
   task_definition       = aws_ecs_task_definition.cubestore_router.arn
   desired_count         = 1
@@ -385,7 +385,7 @@ resource "aws_ecs_service" "cubestore_router" {
 }
 
 resource "aws_ecs_task_definition" "cubestore_router" {
-  family                   = "production"
+  family                   = "cubestore_router"
   container_definitions    = local.cubestore_router_container_definitions
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   network_mode             = "awsvpc"
@@ -426,7 +426,7 @@ resource "aws_service_discovery_service" "cubestore" {
 resource "aws_ecs_service" "cubestore" {
   count = var.cubestore_worker_count
 
-  name                  = "cubestore-service-${count.index}"
+  name                  = "cubestore-${count.index}"
   cluster               = aws_ecs_cluster.main.id
   task_definition       = aws_ecs_task_definition.cubestore.arn
   desired_count         = 1
@@ -448,7 +448,9 @@ resource "aws_ecs_service" "cubestore" {
 }
 
 resource "aws_ecs_task_definition" "cubestore" {
-  family                   = "production"
+  count = var.cubestore_worker_count
+
+  family                   = "cubestore-${count.index}"
   container_definitions    = local.cubestore_container_definitions
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   network_mode             = "awsvpc"
