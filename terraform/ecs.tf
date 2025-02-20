@@ -164,14 +164,6 @@ locals {
       value = "postgres"
     },
     {
-      name  = "CUBEJS_DB_TYPE"
-      value = "postgres"
-    },
-    {
-      name  = "CUBEJS_DB_TYPE"
-      value = "postgres"
-    },
-    {
       name  = "CUBEJS_DB_USER"
       value = "cube"
     },
