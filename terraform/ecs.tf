@@ -87,6 +87,71 @@ resource "aws_secretsmanager_secret_version" "auth0_jwt_key" {
 }
 
 
+variable "cubestore_worker_count" {
+  default = 2
+}
+
+resource "aws_service_discovery_private_dns_namespace" "cubestore" {
+  name = "cubestore.local"
+  vpc  = module.vpc.vpc_id
+}
+
+resource "aws_service_discovery_service" "cubestore" {
+  count = var.cubestore_worker_count
+  name  = "cubestore-${count.index}"
+
+  dns_config {
+    namespace_id = aws_service_discovery_private_dns_namespace.cubestore.id
+
+    dns_records {
+      ttl  = 10
+      type = "SRV"
+    }
+
+    routing_policy = "MULTIVALUE"
+  }
+
+  health_check_custom_config {
+    failure_threshold = 1
+  }
+}
+
+resource "aws_ecs_service" "cubestore" {
+  count = var.cubestore_worker_count
+
+  name                  = "cubestore-${count.index}"
+  cluster               = aws_ecs_cluster.main.id
+  task_definition       = aws_ecs_task_definition.cubestore.arn
+  desired_count         = 1
+  launch_type           = "FARGATE"
+  wait_for_steady_state = true
+
+  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 0
+
+  network_configuration {
+    subnets          = module.vpc.private_subnets
+    security_groups  = [aws_security_group.ecs_service.id]
+    assign_public_ip = true
+  }
+
+  service_registries {
+    registry_arn = aws_service_discovery_service.cubestore[count.index].arn
+  }
+}
+
+resource "aws_ecs_task_definition" "cubestore" {
+  count = var.cubestore_worker_count
+
+  family                   = "cubestore-${count.index}"
+  container_definitions    = local.cubestore_container_definitions
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+}
+
 
 locals {
   cube_shared_environment = [
@@ -151,6 +216,8 @@ locals {
     { name = "CUBEJS_DB_PASS", valueFrom = aws_secretsmanager_secret.postgres_cube_user_pw.arn },
     { name = "CUBEJS_JWT_KEY", valueFrom = aws_secretsmanager_secret.auth0_jwt_key.arn },
   ]
+  cubestore_task_dns_names = join(",", [for i in range(var.cubestore_worker_count) : "cubestore-${i}.${aws_service_discovery_private_dns_namespace.cubestore.name}:80"])
+
   cube_api_container_definitions = jsonencode([
     {
       name      = "cube-api"
@@ -174,10 +241,14 @@ locals {
         },
       ],
       environment = concat(local.cube_shared_environment,
-        {
+        [{
           name  = "CUBEJS_REFRESH_WORKER"
           value = "false"
-        },
+          },
+          {
+            name  = "PORT"
+            value = "80"
+        }]
       ),
       secrets = local.cube_shared_secrets
     }
@@ -206,10 +277,10 @@ locals {
         },
       ],
       environment = concat(local.cube_shared_environment,
-        {
+        [{
           name  = "CUBEJS_REFRESH_WORKER"
           value = "true"
-        },
+        }]
       ),
       secrets = local.cube_shared_secrets
     }
@@ -238,28 +309,26 @@ locals {
         },
       ],
       environment = concat(local.cube_shared_environment,
-        {
+        [{
           name  = "CUBESTORE_SERVER_NAME"
-          value = "${aws_lb.cubestore_router.dns_name}:${aws_lb.cubestore_router.port}"
-        },
-        {
-          name  = "CUBESTORE_META_PORT"
-          value = "${aws_lb.cubestore_router.port}"
-        },
-        {
-          name  = "CUBESTORE_WORKERS"
-          value = "${aws_lb.cubestore.dns_name}:${aws_lb.cubestore.port}"
-        },
-        {
-          name  = "CUBESTORE_REMOTE_DIR"
-          value = "/cube/data"
-        },
+          value = "${aws_service_discovery_private_dns_namespace.cubestore_router.name}:80"
+          },
+          {
+            name  = "CUBESTORE_META_PORT"
+            value = "80"
+          },
+          {
+            name  = "CUBESTORE_WORKERS"
+            value = "${local.cubestore_task_dns_names}"
+          },
+          {
+            name  = "CUBESTORE_REMOTE_DIR"
+            value = "/cube/data"
+        }]
       ),
       secrets = local.cube_shared_secrets
     },
   ])
-
-  cubestore_task_dns_names = join(",", [for i in range(var.cubestore_worker_count) : "cubestore-${i}.${aws_service_discovery_private_dns_namespace.cubestore.name}"])
 
   cubestore_container_definitions = jsonencode([
     {
@@ -284,22 +353,26 @@ locals {
         },
       ],
       environment = concat(local.cube_shared_environment,
-        {
-          name  = "CUBESTORE_WORKER_PORT"
-          value = "80"
-        },
-        {
-          name  = "CUBESTORE_META_ADDR"
-          value = "${aws_lb.cubestore_router.dns_name}:${aws_lb.cubestore_router.port}"
-        },
-        {
-          name  = "CUBESTORE_WORKERS"
-          value = "${local.cubestore_task_dns_names}"
-        },
-        {
-          name  = "CUBESTORE_REMOTE_DIR"
-          value = "/cube/data"
-        },
+        [{
+          name  = "CUBESTORE_SERVER_NAME"
+          value = "${aws_service_discovery_private_dns_namespace.cubestore.name}:80"
+          },
+          {
+            name  = "CUBESTORE_WORKER_PORT"
+            value = "80"
+          },
+          {
+            name  = "CUBESTORE_META_ADDR"
+            value = "${aws_service_discovery_private_dns_namespace.cubestore_router.name}:80"
+          },
+          {
+            name  = "CUBESTORE_WORKERS"
+            value = "${local.cubestore_task_dns_names}"
+          },
+          {
+            name  = "CUBESTORE_REMOTE_DIR"
+            value = "/cube/data"
+        }]
       ),
       secrets = local.cube_shared_secrets
     }
@@ -361,6 +434,30 @@ resource "aws_ecs_service" "cube_refresh_worker" {
   deployment_minimum_healthy_percent = 0
 }
 
+resource "aws_service_discovery_private_dns_namespace" "cubestore_router" {
+  name = "cubestore_router.local"
+  vpc  = module.vpc.vpc_id
+}
+
+resource "aws_service_discovery_service" "cubestore_router" {
+  name = "cubestore_router"
+
+  dns_config {
+    namespace_id = aws_service_discovery_private_dns_namespace.cubestore_router.id
+
+    dns_records {
+      ttl  = 10
+      type = "SRV"
+    }
+
+    routing_policy = "MULTIVALUE"
+  }
+
+  health_check_custom_config {
+    failure_threshold = 1
+  }
+}
+
 resource "aws_ecs_service" "cubestore_router" {
   name                  = "cubestore_router"
   cluster               = aws_ecs_cluster.main.id
@@ -377,81 +474,14 @@ resource "aws_ecs_service" "cubestore_router" {
     security_groups = [aws_security_group.ecs_service.id]
   }
 
-  load_balancer {
-    target_group_arn = aws_lb_target_group.cubestore_router.arn
-    container_name   = "cubestore_router"
-    container_port   = 80
+  service_registries {
+    registry_arn = aws_service_discovery_service.cubestore_router.arn
   }
 }
 
 resource "aws_ecs_task_definition" "cubestore_router" {
   family                   = "cubestore_router"
   container_definitions    = local.cubestore_router_container_definitions
-  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"
-  memory                   = "512"
-}
-
-variable "cubestore_worker_count" {
-  default = 2
-}
-
-resource "aws_service_discovery_private_dns_namespace" "cubestore_namespace" {
-  name = "cubestore.local"
-  vpc  = aws_vpc.my_vpc.id
-}
-
-resource "aws_service_discovery_service" "cubestore" {
-  count = var.cubestore_worker_count
-  name  = "cubestore-${count.index}"
-
-  dns_config {
-    namespace_id = aws_service_discovery_private_dns_namespace.cubestore.id
-
-    dns_records {
-      ttl  = 10
-      type = "SRV"
-    }
-
-    routing_policy = "MULTIVALUE"
-  }
-
-  health_check_custom_config {
-    failure_threshold = 1
-  }
-}
-
-resource "aws_ecs_service" "cubestore" {
-  count = var.cubestore_worker_count
-
-  name                  = "cubestore-${count.index}"
-  cluster               = aws_ecs_cluster.main.id
-  task_definition       = aws_ecs_task_definition.cubestore.arn
-  desired_count         = 1
-  launch_type           = "FARGATE"
-  wait_for_steady_state = true
-
-  deployment_maximum_percent         = 200
-  deployment_minimum_healthy_percent = 0
-
-  network_configuration {
-    subnets          = module.vpc.private_subnets
-    security_groups  = [aws_security_group.ecs_service.id]
-    assign_public_ip = true
-  }
-
-  service_registries {
-    registry_arn = aws_service_discovery_service.cubestore[count.index].arn
-  }
-}
-
-resource "aws_ecs_task_definition" "cubestore" {
-  count = var.cubestore_worker_count
-
-  family                   = "cubestore-${count.index}"
-  container_definitions    = local.cubestore_container_definitions
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
