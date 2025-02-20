@@ -1,7 +1,7 @@
 
 locals {
-  domain_name     = "synccomputing.com"
-  api_domain_name = "query-api.${local.domain_name}"
+  domain_name     = "cube-api.synccomputing.com"
+  api_domain_name = "internal-cube-api-lb.${local.domain_name}"
 }
 
 resource "aws_route53_zone" "main" {
