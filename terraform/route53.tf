@@ -4,7 +4,7 @@ locals {
   api_domain_name = "query-api.${local.domain_name}"
 }
 
-data "aws_route53_zone" "main" {
+resource "aws_route53_zone" "main" {
   name = local.domain_name
 }
 
@@ -41,7 +41,7 @@ resource "aws_route53_record" "cert_validation_records" {
   records         = [each.value.record]
   ttl             = 60
   type            = each.value.type
-  zone_id         = data.aws_route53_zone.main.zone_id
+  zone_id         = aws_route53_zone.main.zone_id
 }
 
 resource "aws_route53_record" "lb_cert_validation_records" {
@@ -58,7 +58,7 @@ resource "aws_route53_record" "lb_cert_validation_records" {
   records         = [each.value.record]
   ttl             = 60
   type            = each.value.type
-  zone_id         = data.aws_route53_zone.main.zone_id
+  zone_id         = aws_route53_zone.main.zone_id
 }
 
 resource "aws_acm_certificate_validation" "main" {
@@ -72,29 +72,29 @@ resource "aws_acm_certificate_validation" "lb" {
 }
 
 resource "aws_route53_record" "main" {
-  zone_id = data.aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.main.zone_id
   name    = local.domain_name
   type    = "A"
   alias {
-    name                   = module.sync_svc_cube_cdn.cloudfront_distribution_domain_name
-    zone_id                = module.sync_svc_cube_cdn.cloudfront_distribution_hosted_zone_id
+    name                   = aws_cloudfront_distribution.sync_svc_cube_cdn.domain_name
+    zone_id                = aws_cloudfront_distribution.sync_svc_cube_cdn.hosted_zone_id
     evaluate_target_health = false
   }
 }
 
 resource "aws_route53_record" "www" {
-  zone_id = data.aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.main.zone_id
   name    = "www.${local.domain_name}"
   type    = "A"
   alias {
-    name                   = module.sync_svc_cube_cdn.cloudfront_distribution_domain_name
-    zone_id                = module.sync_svc_cube_cdn.cloudfront_distribution_hosted_zone_id
+    name                   = aws_cloudfront_distribution.sync_svc_cube_cdn.domain_name
+    zone_id                = aws_cloudfront_distribution.sync_svc_cube_cdn.hosted_zone_id
     evaluate_target_health = false
   }
 }
 
 resource "aws_route53_record" "lb" {
-  zone_id = data.aws_route53_zone.main.zone_id
+  zone_id = aws_route53_zone.main.zone_id
   name    = local.api_domain_name
   type    = "A"
   alias {
