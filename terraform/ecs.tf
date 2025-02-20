@@ -121,7 +121,7 @@ resource "aws_ecs_service" "cubestore" {
 
   name                  = "cubestore-${count.index}"
   cluster               = aws_ecs_cluster.main.id
-  task_definition       = aws_ecs_task_definition.cubestore.arn
+  task_definition       = aws_ecs_task_definition.cubestore[count.index].arn
   desired_count         = 1
   launch_type           = "FARGATE"
   wait_for_steady_state = true
