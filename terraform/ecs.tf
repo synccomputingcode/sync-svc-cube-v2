@@ -63,27 +63,19 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_managed" {
 
 
 resource "aws_secretsmanager_secret" "postgres_cube_user_pw" {
-  name = "production-postgres-cube-user-pw"
+  name = "production/postgres-cube-user-pw"
 }
 
 resource "aws_secretsmanager_secret_version" "postgres_cube_user_pw" {
   secret_id = aws_secretsmanager_secret.postgres_cube_user_pw.id
-
-  lifecycle {
-    ignore_changes = [secret_string]
-  }
 }
 
 resource "aws_secretsmanager_secret" "auth0_jwt_key" {
-  name = "production-auth0-jwt-key"
+  name = "production/auth0-jwt-key"
 }
 
 resource "aws_secretsmanager_secret_version" "auth0_jwt_key" {
   secret_id = aws_secretsmanager_secret.auth0_jwt_key.id
-
-  lifecycle {
-    ignore_changes = [secret_string]
-  }
 }
 
 
@@ -137,6 +129,7 @@ resource "aws_ecs_service" "cubestore" {
 
   service_registries {
     registry_arn = aws_service_discovery_service.cubestore[count.index].arn
+    port         = 80
   }
 }
 
@@ -162,6 +155,14 @@ locals {
     {
       name  = "CUBEJS_DB_TYPE"
       value = "postgres"
+    },
+    {
+      name  = "CUBEJS_DB_HOST"
+      value = "ec2-3-221-59-105.compute-1.amazonaws.com"
+    },
+    {
+      name  = "CUBEJS_DB_PORT"
+      value = "5432"
     },
     {
       name  = "CUBEJS_DB_USER"
@@ -424,6 +425,11 @@ resource "aws_ecs_service" "cube_refresh_worker" {
 
   deployment_maximum_percent         = 200
   deployment_minimum_healthy_percent = 0
+
+  network_configuration {
+    subnets         = module.vpc.private_subnets
+    security_groups = [aws_security_group.ecs_service.id]
+  }
 }
 
 resource "aws_service_discovery_private_dns_namespace" "cubestore_router" {
@@ -468,6 +474,7 @@ resource "aws_ecs_service" "cubestore_router" {
 
   service_registries {
     registry_arn = aws_service_discovery_service.cubestore_router.arn
+    port         = 80
   }
 }
 
