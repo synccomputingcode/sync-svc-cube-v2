@@ -303,55 +303,6 @@ locals {
       secrets = local.cube_shared_secrets
     },
   ])
-
-  cubestore_container_definitions = jsonencode([
-    {
-      name      = "cubestore"
-      image     = "${var.cubestore_image}"
-      cpu       = 256
-      memory    = 512
-      essential = true
-      logConfiguration = {
-        "logDriver" : "awslogs",
-        "options" : {
-          "awslogs-group" : aws_cloudwatch_log_group.main.name,
-          "awslogs-region" : "us-east-1",
-          "awslogs-stream-prefix" : "ecs"
-        }
-      }
-      portMappings = [
-        {
-          containerPort = 80,
-          hostPort      = 80,
-          protocol      = "tcp",
-          name          = "cubestore-worker-port"
-        },
-      ],
-      environment = concat(local.cube_shared_environment,
-        [{
-          name  = "CUBESTORE_SERVER_NAME"
-          value = "localhost:80"
-          },
-          {
-            name  = "CUBESTORE_WORKER_PORT"
-            value = "80"
-          },
-          {
-            name  = "CUBESTORE_META_ADDR"
-            value = "cubestore-router:80"
-          },
-          {
-            name  = "CUBESTORE_WORKERS"
-            value = "${local.cubestore_task_dns_names}"
-          },
-          {
-            name  = "CUBESTORE_REMOTE_DIR"
-            value = "/cube/data"
-        }]
-      ),
-      secrets = local.cube_shared_secrets
-    }
-  ])
 }
 
 resource "aws_ecs_task_definition" "cube_api" {
@@ -524,12 +475,60 @@ resource "aws_ecs_task_definition" "cubestore" {
   count = var.cubestore_worker_count
 
   family                   = "cubestore-${count.index}"
-  container_definitions    = local.cubestore_container_definitions
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   task_role_arn            = aws_iam_role.ecs_task_role.arn
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = "256"
   memory                   = "512"
+
+  container_definitions = jsonencode([
+    {
+      name      = "cubestore"
+      image     = "${var.cubestore_image}"
+      cpu       = 256
+      memory    = 512
+      essential = true
+      logConfiguration = {
+        "logDriver" : "awslogs",
+        "options" : {
+          "awslogs-group" : aws_cloudwatch_log_group.main.name,
+          "awslogs-region" : "us-east-1",
+          "awslogs-stream-prefix" : "ecs"
+        }
+      }
+      portMappings = [
+        {
+          containerPort = 80,
+          hostPort      = 80,
+          protocol      = "tcp",
+          name          = "cubestore-worker-port"
+        },
+      ],
+      environment = concat(local.cube_shared_environment,
+        [{
+          name  = "CUBESTORE_SERVER_NAME"
+          value = "cubestore-worker-${count.index}:80"
+          },
+          {
+            name  = "CUBESTORE_WORKER_PORT"
+            value = "80"
+          },
+          {
+            name  = "CUBESTORE_META_ADDR"
+            value = "cubestore-router:80"
+          },
+          {
+            name  = "CUBESTORE_WORKERS"
+            value = "${local.cubestore_task_dns_names}"
+          },
+          {
+            name  = "CUBESTORE_REMOTE_DIR"
+            value = "/cube/data"
+        }]
+      ),
+      secrets = local.cube_shared_secrets
+    }
+  ])
  
 }
