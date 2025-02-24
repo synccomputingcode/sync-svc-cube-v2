@@ -57,7 +57,7 @@ resource "aws_security_group" "lb" {
     from_port = 443
     to_port   = 443
     protocol  = "tcp"
-    prefix_list_ids = [
+    prefix_list_ids = [ # Allow traffic from cloudfront which IPs are stored in an aws managed prefix list
       "pl-3b927c52",
     ]
   }
