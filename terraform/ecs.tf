@@ -158,7 +158,7 @@ locals {
     },
     {
       name  = "CUBEJS_DEV_MODE"
-      value = "true"
+      value = "false"
     },
     {
       name  = "NODE_ENV",
@@ -211,17 +211,28 @@ locals {
           containerPort = 80,
           hostPort      = 80,
           protocol      = "tcp",
+          name          = "cube-api-port"
         },
       ],
       environment = concat(local.cube_shared_environment,
-        [{
-          name  = "CUBEJS_REFRESH_WORKER"
-          value = "false"
+        [
+          {
+            name  = "CUBEJS_REFRESH_WORKER"
+            value = "false"
           },
           {
             name  = "PORT"
             value = "80"
-        }]
+          },
+          {
+            name  = "CUBEJS_CUBESTORE_HOST"
+            value = "cubestore-router-http"
+          },
+          {
+            name  = "CUBEJS_CUBESTORE_PORT"
+            value = "3030"
+          }
+        ]
       ),
       secrets = local.cube_shared_secrets
     }
@@ -247,12 +258,21 @@ locals {
           containerPort = 80,
           hostPort      = 80,
           protocol      = "tcp",
+          name          = "cube-refresh-worker-port"
         },
       ],
       environment = concat(local.cube_shared_environment,
         [{
           name  = "CUBEJS_REFRESH_WORKER"
           value = "true"
+          },
+          {
+            name  = "CUBEJS_CUBESTORE_HOST"
+            value = "cubestore-router-http"
+          },
+          {
+            name  = "CUBEJS_CUBESTORE_PORT"
+            value = "3030"
         }]
       ),
       secrets = local.cube_shared_secrets
@@ -281,6 +301,18 @@ locals {
           protocol      = "tcp",
           name          = "cubestore-router-port"
         },
+        {
+          containerPort = 3030,
+          hostPort      = 3030,
+          protocol      = "tcp",
+          name          = "cubestore-router-http-port"
+        },
+        {
+          containerPort = 3031,
+          hostPort      = 3031,
+          protocol      = "tcp",
+          name          = "cubestore-router-status-port"
+        }
       ],
       environment = concat(local.cube_shared_environment,
         [{
@@ -317,12 +349,12 @@ resource "aws_ecs_task_definition" "cube_api" {
 }
 
 resource "aws_ecs_service" "cube_api" {
-  name                  = "cube_api"
-  cluster               = aws_ecs_cluster.main.id
-  task_definition       = aws_ecs_task_definition.cube_api.arn
-  desired_count         = 1
-  launch_type           = "FARGATE"
-  wait_for_steady_state = true
+  name                   = "cube_api"
+  cluster                = aws_ecs_cluster.main.id
+  task_definition        = aws_ecs_task_definition.cube_api.arn
+  desired_count          = 1
+  launch_type            = "FARGATE"
+  wait_for_steady_state  = true
   enable_execute_command = true
 
   deployment_maximum_percent         = 200
@@ -331,6 +363,11 @@ resource "aws_ecs_service" "cube_api" {
   network_configuration {
     subnets         = module.vpc.private_subnets
     security_groups = [aws_security_group.ecs_service.id]
+  }
+
+  service_connect_configuration {
+    enabled   = true
+    namespace = aws_service_discovery_http_namespace.cubestore.arn
   }
 
   load_balancer {
@@ -352,12 +389,12 @@ resource "aws_ecs_task_definition" "cube_refresh_worker" {
 }
 
 resource "aws_ecs_service" "cube_refresh_worker" {
-  name                  = "cube_refresh_worker"
-  cluster               = aws_ecs_cluster.main.id
-  task_definition       = aws_ecs_task_definition.cube_refresh_worker.arn
-  desired_count         = 1
-  launch_type           = "FARGATE"
-  wait_for_steady_state = true
+  name                   = "cube_refresh_worker"
+  cluster                = aws_ecs_cluster.main.id
+  task_definition        = aws_ecs_task_definition.cube_refresh_worker.arn
+  desired_count          = 1
+  launch_type            = "FARGATE"
+  wait_for_steady_state  = true
   enable_execute_command = true
 
   deployment_maximum_percent         = 200
@@ -367,6 +404,11 @@ resource "aws_ecs_service" "cube_refresh_worker" {
     subnets         = module.vpc.private_subnets
     security_groups = [aws_security_group.ecs_service.id]
   }
+
+  service_connect_configuration {
+    enabled   = true
+    namespace = aws_service_discovery_http_namespace.cubestore.arn
+  }
 }
 
 resource "aws_service_discovery_http_namespace" "cubestore" {
@@ -375,12 +417,12 @@ resource "aws_service_discovery_http_namespace" "cubestore" {
 }
 
 resource "aws_ecs_service" "cubestore_router" {
-  name                  = "cubestore_router"
-  cluster               = aws_ecs_cluster.main.id
-  task_definition       = aws_ecs_task_definition.cubestore_router.arn
-  desired_count         = 1
-  launch_type           = "FARGATE"
-  wait_for_steady_state = true
+  name                   = "cubestore_router"
+  cluster                = aws_ecs_cluster.main.id
+  task_definition        = aws_ecs_task_definition.cubestore_router.arn
+  desired_count          = 1
+  launch_type            = "FARGATE"
+  wait_for_steady_state  = true
   enable_execute_command = true
 
   deployment_maximum_percent         = 200
@@ -410,6 +452,24 @@ resource "aws_ecs_service" "cubestore_router" {
         dns_name = "cubestore-router"
       }
     }
+
+    service {
+      discovery_name = "cubestore-router-status"
+      port_name      = "cubestore-router-status-port"
+      client_alias {
+        port     = 3031
+        dns_name = "cubestore-router-status"
+      }
+    }
+
+    service {
+      discovery_name = "cubestore-router-http"
+      port_name      = "cubestore-router-http-port"
+      client_alias {
+        port     = 3030
+        dns_name = "cubestore-router-http"
+      }
+    }
   }
 }
 
@@ -427,12 +487,12 @@ resource "aws_ecs_task_definition" "cubestore_router" {
 resource "aws_ecs_service" "cubestore" {
   count = var.cubestore_worker_count
 
-  name                  = "cubestore_${count.index}"
-  cluster               = aws_ecs_cluster.main.id
-  task_definition       = aws_ecs_task_definition.cubestore[count.index].arn
-  desired_count         = 1
-  launch_type           = "FARGATE"
-  wait_for_steady_state = true
+  name                   = "cubestore_${count.index}"
+  cluster                = aws_ecs_cluster.main.id
+  task_definition        = aws_ecs_task_definition.cubestore[count.index].arn
+  desired_count          = 1
+  launch_type            = "FARGATE"
+  wait_for_steady_state  = true
   enable_execute_command = true
 
   deployment_maximum_percent         = 200
@@ -503,7 +563,7 @@ resource "aws_ecs_task_definition" "cubestore" {
           hostPort      = 80,
           protocol      = "tcp",
           name          = "cubestore-worker-port"
-        },
+        }
       ],
       environment = concat(local.cube_shared_environment,
         [{
@@ -530,5 +590,5 @@ resource "aws_ecs_task_definition" "cubestore" {
       secrets = local.cube_shared_secrets
     }
   ])
- 
+
 }
