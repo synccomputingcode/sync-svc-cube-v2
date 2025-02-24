@@ -23,11 +23,12 @@ data "aws_iam_policy_document" "ecs_task_execution_role" {
   statement {
     actions = ["secretsmanager:GetSecretValue"]
     resources = [
-      aws_db_instance.main.master_user_secret.0.secret_arn,
-      aws_secretsmanager_secret.django_secret_key.arn
+      aws_secretsmanager_secret.postgres_cube_user_pw.arn,
+      aws_secretsmanager_secret.auth0_jwt_key.arn
     ]
   }
 }
+
 resource "aws_iam_role" "ecs_task_execution_role" {
   name = "ecs_task_execution_role"
 
@@ -43,42 +44,157 @@ resource "aws_iam_role" "ecs_task_execution_role" {
       },
     ],
   })
+}
 
-  inline_policy {
-    name   = "ecs_task_execution_role_get_secret"
-    policy = data.aws_iam_policy_document.ecs_task_execution_role.json
+resource "aws_iam_role" "ecs_task_role" {
+  name = "ecs_task_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com",
+        },
+        Action = "sts:AssumeRole",
+      }
+
+    ],
+  })
+}
+
+
+resource "aws_iam_policy" "ecs_task_ssm_policy" {
+  name = "ecs_task_ssm_policy"
+
+  policy = <<EOF
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": [
+          "ssmmessages:CreateControlChannel",
+          "ssmmessages:CreateDataChannel",
+          "ssmmessages:OpenControlChannel",
+          "ssmmessages:OpenDataChannel",
+          "ssm:StartSession",
+          "ssm:TerminateSession",
+          "ssm:DescribeSessions",
+          "ecs:ExecuteCommand"
+        ],
+        "Resource": "*"
+      }
+    ]
   }
-
-  managed_policy_arns = [
-    "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
-  ]
+EOF
 }
 
-resource "aws_secretsmanager_secret" "django_secret_key" {
-  name = "production-django-secret-key"
+resource "aws_iam_policy" "ecs_task_execution_role_policy" {
+  name        = "ecs_task_execution_role_policy"
+  description = "Policy for ECS Task Execution Role to get secrets"
+  policy      = data.aws_iam_policy_document.ecs_task_execution_role.json
 }
 
-resource "aws_secretsmanager_secret_version" "django_secret_key" {
-  secret_id     = aws_secretsmanager_secret.django_secret_key.id
-  secret_string = data.aws_secretsmanager_random_password.django_secret_key.random_password
-
-  lifecycle {
-    ignore_changes = [secret_string]
-  }
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_attach" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = aws_iam_policy.ecs_task_execution_role_policy.arn
 }
 
-data "aws_secretsmanager_random_password" "django_secret_key" {
-  password_length     = 50
-  include_space       = false
-  exclude_punctuation = true
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_managed" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_role_attach" {
+  role       = aws_iam_role.ecs_task_role.name
+  policy_arn = aws_iam_policy.ecs_task_ssm_policy.arn
+}
+
+
+resource "aws_secretsmanager_secret" "postgres_cube_user_pw" {
+  name = "production/postgres-cube-user-pw"
+}
+
+resource "aws_secretsmanager_secret" "auth0_jwt_key" {
+  name = "production/auth0-jwt-key"
+}
+
+variable "cubestore_worker_count" {
+  default = 2
 }
 
 
 locals {
-  container_definitions = jsonencode([
+  cube_shared_environment = [
     {
-      name      = "backend-api"
-      image     = "${var.app_image}"
+      name  = "CUBEJS_DB_SSL"
+      value = "true"
+    },
+    {
+      name  = "CUBEJS_DB_TYPE"
+      value = "postgres"
+    },
+    {
+      name  = "CUBEJS_DB_HOST"
+      value = "ec2-3-221-59-105.compute-1.amazonaws.com"
+    },
+    {
+      name  = "CUBEJS_DB_PORT"
+      value = "5432"
+    },
+    {
+      name  = "CUBEJS_DB_USER"
+      value = "cube"
+    },
+    {
+      name  = "CUBEJS_DB_NAME"
+      value = "d20nhfliefb6aa"
+    },
+    {
+      name  = "CUBEJS_SCHEMA_PATH"
+      value = "model"
+    },
+    {
+      name  = "CUBEJS_DEV_MODE"
+      value = "false"
+    },
+    {
+      name  = "NODE_ENV",
+      value = "production"
+    },
+    {
+      name  = "CUBEJS_JWK_URL"
+      value = "https://sync-prod.us.auth0.com/.well-known/jwks.json"
+    },
+    {
+      name  = "CUBEJS_JWT_AUDIENCE"
+      value = "https://api.synccomputing.com"
+    },
+    {
+      name  = "CUBEJS_JWT_ISSUER"
+      value = "https://login.app.synccomputing.com/"
+    },
+    {
+      name  = "CUBEJS_JWT_ALGS"
+      value = "RS256"
+    },
+    {
+      name  = "CUBEJS_JWT_CLAIMS_NAMESPACE"
+      value = "https://synccomputing.com/"
+    }
+  ]
+  cube_shared_secrets = [
+    { name = "CUBEJS_DB_PASS", valueFrom = aws_secretsmanager_secret.postgres_cube_user_pw.arn },
+    { name = "CUBEJS_JWT_KEY", valueFrom = aws_secretsmanager_secret.auth0_jwt_key.arn },
+  ]
+  cubestore_task_dns_names = join(",", [for i in range(var.cubestore_worker_count) : "cubestore-worker-${i}:80"])
+
+  cube_api_container_definitions = jsonencode([
+    {
+      name      = "cube-api"
+      image     = "${var.cube_image}"
       cpu       = 256
       memory    = 512
       essential = true
@@ -95,82 +211,384 @@ locals {
           containerPort = 80,
           hostPort      = 80,
           protocol      = "tcp",
+          name          = "cube-api-port"
         },
       ],
-      environment = [
+      environment = concat(local.cube_shared_environment,
+        [
+          {
+            name  = "CUBEJS_REFRESH_WORKER"
+            value = "false"
+          },
+          {
+            name  = "PORT"
+            value = "80"
+          },
+          {
+            name  = "CUBEJS_CUBESTORE_HOST"
+            value = "cubestore-router-http"
+          },
+          {
+            name  = "CUBEJS_CUBESTORE_PORT"
+            value = "3030"
+          }
+        ]
+      ),
+      secrets = local.cube_shared_secrets
+    }
+  ])
+
+  cube_refresh_worker_container_definitions = jsonencode([
+    {
+      name      = "cube-refresh-worker"
+      image     = "${var.cube_image}"
+      cpu       = 256
+      memory    = 512
+      essential = true
+      logConfiguration = {
+        "logDriver" : "awslogs",
+        "options" : {
+          "awslogs-group" : aws_cloudwatch_log_group.main.name,
+          "awslogs-region" : "us-east-1",
+          "awslogs-stream-prefix" : "ecs"
+        }
+      }
+      portMappings = [
         {
-          name  = "ALLOWED_HOSTS"
-          value = "${local.api_domain_name},${local.domain_name}"
-        },
-        {
-          name  = "CORS_ALLOWED_ORIGINS"
-          value = "https://${local.api_domain_name},https://${local.domain_name}"
-        },
-        {
-          name="CSRF_COOKIE_DOMAIN"
-          value=".${local.domain_name}"
-        },
-        {
-          name  = "DB_HOST"
-          value = aws_db_instance.main.address
-        },
-        {
-          name  = "DB_PORT"
-          value = tostring(aws_db_instance.main.port)
-        },
-        {
-          name  = "DB_NAME"
-          value = aws_db_instance.main.db_name
-        },
-        {
-          name  = "DB_USER"
-          value = aws_db_instance.main.username
+          containerPort = 80,
+          hostPort      = 80,
+          protocol      = "tcp",
+          name          = "cube-refresh-worker-port"
         },
       ],
-      secrets = [
+      environment = concat(local.cube_shared_environment,
+        [{
+          name  = "CUBEJS_REFRESH_WORKER"
+          value = "true"
+          },
+          {
+            name  = "CUBEJS_CUBESTORE_HOST"
+            value = "cubestore-router-http"
+          },
+          {
+            name  = "CUBEJS_CUBESTORE_PORT"
+            value = "3030"
+        }]
+      ),
+      secrets = local.cube_shared_secrets
+    }
+  ])
+
+  cubestore_router_container_definitions = jsonencode([
+    {
+      name      = "cubestore-router"
+      image     = "${var.cubestore_image}"
+      cpu       = 256
+      memory    = 512
+      essential = true
+      logConfiguration = {
+        "logDriver" : "awslogs",
+        "options" : {
+          "awslogs-group" : aws_cloudwatch_log_group.main.name,
+          "awslogs-region" : "us-east-1",
+          "awslogs-stream-prefix" : "ecs"
+        }
+      }
+      portMappings = [
         {
-          name      = "DB_PASSWORD"
-          valueFrom = "${aws_db_instance.main.master_user_secret.0.secret_arn}:password::"
+          containerPort = 80,
+          hostPort      = 80,
+          protocol      = "tcp",
+          name          = "cubestore-router-port"
         },
         {
-          name      = "SECRET_KEY"
-          valueFrom = aws_secretsmanager_secret.django_secret_key.arn
+          containerPort = 3030,
+          hostPort      = 3030,
+          protocol      = "tcp",
+          name          = "cubestore-router-http-port"
         },
-      ]
+        {
+          containerPort = 3031,
+          hostPort      = 3031,
+          protocol      = "tcp",
+          name          = "cubestore-router-status-port"
+        }
+      ],
+      environment = concat(local.cube_shared_environment,
+        [{
+          name  = "CUBESTORE_SERVER_NAME"
+          value = "cubestore-router:80"
+          },
+          {
+            name  = "CUBESTORE_META_PORT"
+            value = "80"
+          },
+          {
+            name  = "CUBESTORE_WORKERS"
+            value = "${local.cubestore_task_dns_names}"
+          },
+          {
+            name  = "CUBESTORE_REMOTE_DIR"
+            value = "/cube/data"
+        }]
+      ),
+      secrets = local.cube_shared_secrets
     },
   ])
 }
 
-resource "aws_ecs_task_definition" "main" {
-  family                   = "production"
-  container_definitions    = local.container_definitions
+resource "aws_ecs_task_definition" "cube_api" {
+  family                   = "cube_api"
+  container_definitions    = local.cube_api_container_definitions
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_role.arn
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = "256"
   memory                   = "512"
 }
 
-resource "aws_ecs_service" "main" {
-  name                  = "production"
-  cluster               = aws_ecs_cluster.main.id
-  task_definition       = aws_ecs_task_definition.main.arn
-  desired_count         = 1
-  launch_type           = "FARGATE"
-  wait_for_steady_state = true
+resource "aws_ecs_service" "cube_api" {
+  name                   = "cube_api"
+  cluster                = aws_ecs_cluster.main.id
+  task_definition        = aws_ecs_task_definition.cube_api.arn
+  desired_count          = 1
+  launch_type            = "FARGATE"
+  wait_for_steady_state  = true
+  enable_execute_command = true
 
   deployment_maximum_percent         = 200
   deployment_minimum_healthy_percent = 0
 
   network_configuration {
-    subnets          = module.vpc.public_subnets
-    security_groups  = [aws_security_group.ecs_service.id]
-    assign_public_ip = true
+    subnets         = module.vpc.private_subnets
+    security_groups = [aws_security_group.ecs_service.id]
+  }
+
+  service_connect_configuration {
+    enabled   = true
+    namespace = aws_service_discovery_http_namespace.cubestore.arn
   }
 
   load_balancer {
     target_group_arn = aws_lb_target_group.main.arn
-    container_name   = "backend-api"
+    container_name   = "cube-api"
     container_port   = 80
   }
+}
+
+resource "aws_ecs_task_definition" "cube_refresh_worker" {
+  family                   = "cube_refresh_worker"
+  container_definitions    = local.cube_refresh_worker_container_definitions
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_role.arn
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+}
+
+resource "aws_ecs_service" "cube_refresh_worker" {
+  name                   = "cube_refresh_worker"
+  cluster                = aws_ecs_cluster.main.id
+  task_definition        = aws_ecs_task_definition.cube_refresh_worker.arn
+  desired_count          = 1
+  launch_type            = "FARGATE"
+  wait_for_steady_state  = true
+  enable_execute_command = true
+
+  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 0
+
+  network_configuration {
+    subnets         = module.vpc.private_subnets
+    security_groups = [aws_security_group.ecs_service.id]
+  }
+
+  service_connect_configuration {
+    enabled   = true
+    namespace = aws_service_discovery_http_namespace.cubestore.arn
+  }
+}
+
+resource "aws_service_discovery_http_namespace" "cubestore" {
+  name        = "cubestore.local"
+  description = "Service discovery namespace for cubestore workers and router"
+}
+
+resource "aws_ecs_service" "cubestore_router" {
+  name                   = "cubestore_router"
+  cluster                = aws_ecs_cluster.main.id
+  task_definition        = aws_ecs_task_definition.cubestore_router.arn
+  desired_count          = 1
+  launch_type            = "FARGATE"
+  wait_for_steady_state  = true
+  enable_execute_command = true
+
+  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 0
+
+  network_configuration {
+    subnets         = module.vpc.private_subnets
+    security_groups = [aws_security_group.ecs_service.id]
+  }
+
+  service_connect_configuration {
+    enabled   = true
+    namespace = aws_service_discovery_http_namespace.cubestore.arn
+    log_configuration {
+      log_driver = "awslogs"
+      options = {
+        "awslogs-group"         = aws_cloudwatch_log_group.main.name,
+        "awslogs-region"        = "us-east-1",
+        "awslogs-stream-prefix" = "ecs"
+      }
+    }
+    service {
+      discovery_name = "cubestore-router"
+      port_name      = "cubestore-router-port"
+      client_alias {
+        port     = 80
+        dns_name = "cubestore-router"
+      }
+    }
+
+    service {
+      discovery_name = "cubestore-router-status"
+      port_name      = "cubestore-router-status-port"
+      client_alias {
+        port     = 3031
+        dns_name = "cubestore-router-status"
+      }
+    }
+
+    service {
+      discovery_name = "cubestore-router-http"
+      port_name      = "cubestore-router-http-port"
+      client_alias {
+        port     = 3030
+        dns_name = "cubestore-router-http"
+      }
+    }
+  }
+}
+
+resource "aws_ecs_task_definition" "cubestore_router" {
+  family                   = "cubestore_router"
+  container_definitions    = local.cubestore_router_container_definitions
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_role.arn
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+}
+
+resource "aws_ecs_service" "cubestore" {
+  count = var.cubestore_worker_count
+
+  name                   = "cubestore_${count.index}"
+  cluster                = aws_ecs_cluster.main.id
+  task_definition        = aws_ecs_task_definition.cubestore[count.index].arn
+  desired_count          = 1
+  launch_type            = "FARGATE"
+  wait_for_steady_state  = true
+  enable_execute_command = true
+
+  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 0
+
+
+  network_configuration {
+    subnets          = module.vpc.private_subnets
+    security_groups  = [aws_security_group.ecs_service.id]
+    assign_public_ip = true
+  }
+
+  service_connect_configuration {
+    enabled   = true
+    namespace = aws_service_discovery_http_namespace.cubestore.arn
+    log_configuration {
+      log_driver = "awslogs"
+      options = {
+        "awslogs-group"         = aws_cloudwatch_log_group.main.name,
+        "awslogs-region"        = "us-east-1",
+        "awslogs-stream-prefix" = "ecs"
+      }
+    }
+    service {
+      discovery_name = "cubestore-worker-${count.index}"
+      port_name      = "cubestore-worker-port"
+      client_alias {
+        port     = 80
+        dns_name = "cubestore-worker-${count.index}"
+      }
+    }
+  }
+
+  # service_registries {
+  #   registry_arn = aws_service_discovery_service.cubestore[count.index].arn
+  # }
+}
+
+resource "aws_ecs_task_definition" "cubestore" {
+  count = var.cubestore_worker_count
+
+  family                   = "cubestore-${count.index}"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_role.arn
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+
+  container_definitions = jsonencode([
+    {
+      name      = "cubestore"
+      image     = "${var.cubestore_image}"
+      cpu       = 256
+      memory    = 512
+      essential = true
+      logConfiguration = {
+        "logDriver" : "awslogs",
+        "options" : {
+          "awslogs-group" : aws_cloudwatch_log_group.main.name,
+          "awslogs-region" : "us-east-1",
+          "awslogs-stream-prefix" : "ecs"
+        }
+      }
+      portMappings = [
+        {
+          containerPort = 80,
+          hostPort      = 80,
+          protocol      = "tcp",
+          name          = "cubestore-worker-port"
+        }
+      ],
+      environment = concat(local.cube_shared_environment,
+        [{
+          name  = "CUBESTORE_SERVER_NAME"
+          value = "cubestore-worker-${count.index}:80"
+          },
+          {
+            name  = "CUBESTORE_WORKER_PORT"
+            value = "80"
+          },
+          {
+            name  = "CUBESTORE_META_ADDR"
+            value = "cubestore-router:80"
+          },
+          {
+            name  = "CUBESTORE_WORKERS"
+            value = "${local.cubestore_task_dns_names}"
+          },
+          {
+            name  = "CUBESTORE_REMOTE_DIR"
+            value = "/cube/data"
+        }]
+      ),
+      secrets = local.cube_shared_secrets
+    }
+  ])
+
 }

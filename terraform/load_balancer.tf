@@ -1,14 +1,13 @@
-
 resource "aws_lb" "main" {
-  name               = "production-lb"
-  internal           = false
+  name               = "cube-api-production-lb"
+  internal           = true
   load_balancer_type = "application"
   security_groups    = [aws_security_group.lb.id]
-  subnets            = module.vpc.public_subnets
+  subnets            = module.vpc.private_subnets
 }
 
 resource "aws_lb_target_group" "main" {
-  name                 = "production-tg"
+  name                 = "cube-api-production-tg"
   port                 = 80
   protocol             = "HTTP"
   vpc_id               = module.vpc.vpc_id
@@ -16,7 +15,7 @@ resource "aws_lb_target_group" "main" {
   deregistration_delay = 5
 
   health_check {
-    path              = "/api/healthcheck"
+    path              = "/readyz"
     healthy_threshold = 2
     interval          = 15
   }
@@ -48,5 +47,20 @@ resource "aws_lb_listener" "https" {
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.main.arn
+  }
+}
+
+resource "aws_cloudfront_vpc_origin" "alb" {
+  vpc_origin_endpoint_config {
+    name                   = "cube-alb-vpc-origin"
+    arn                    = aws_lb.main.arn
+    http_port              = 80
+    https_port             = 443
+    origin_protocol_policy = "https-only"
+
+    origin_ssl_protocols {
+      items    = ["TLSv1.2"]
+      quantity = 1
+    }
   }
 }
