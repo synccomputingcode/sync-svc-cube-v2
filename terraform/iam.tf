@@ -36,7 +36,7 @@ resource "aws_iam_policy" "sync_svc_cube_ecr_policy" {
         "Action" : [
           "ecr:GetAuthorizationToken"
         ],
-        "Resource" : aws_ecr_repository.sync_svc_cube_repo.arn
+        "Resource" : "*"
       },
       {
         "Sid" : "AllowPushPull",
