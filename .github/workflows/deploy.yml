@@ -30,7 +30,7 @@ jobs:
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: sync-svc-cube
-          IMAGE_TAG: "cubejs/cube:${{ github.sha }}"
+          IMAGE_TAG: "${{ github.sha }}"
         run: |
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
@@ -40,7 +40,7 @@ jobs:
           cache: true
           locked: true
       - name: Update cube-api Task Definition with latest image
-        run: pixi run python scripts/update_task.py --task-definition cube_api --container-name cube-api --image cubejs/cube:$IMAGE_TAG
+        run: pixi run python scripts/update_task.py --task-definition cube_api --container-name cube-api --image sync-svc-cube:${{ github.sha }}
 
       - name: Update cube-refresh-worker Task Definition with latest image
-        run: pixi run python scripts/update_task.py --task-definition cube_refresh_worker --container-name cube-refresh-worker --image cubejs/cube:$IMAGE_TAG
+        run: pixi run python scripts/update_task.py --task-definition cube_refresh_worker --container-name cube-refresh-worker --image sync-svc-cube:${{ github.sha }}
