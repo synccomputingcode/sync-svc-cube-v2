@@ -194,7 +194,7 @@ locals {
   cube_api_container_definitions = jsonencode([
     {
       name      = "cube-api"
-      image     = "${var.cube_image}"
+      image     = "${aws_ecr_repository.sync_svc_cube_repo.repository_url}:latest"
       cpu       = 256
       memory    = 512
       essential = true
@@ -241,7 +241,7 @@ locals {
   cube_refresh_worker_container_definitions = jsonencode([
     {
       name      = "cube-refresh-worker"
-      image     = "${var.cube_image}"
+      image     = "${aws_ecr_repository.sync_svc_cube_repo.repository_url}:latest"
       cpu       = 256
       memory    = 512
       essential = true
