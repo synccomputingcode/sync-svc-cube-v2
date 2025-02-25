@@ -1,0 +1,142 @@
+cubes:
+  - name: databricks_run
+    data_source: default
+    sql: >
+      SELECT *
+      FROM databricks_run
+      WHERE sync_tenant_id = '{{ tenant_resolver(COMPILE_CONTEXT.securityContext) | safe }}'
+
+    joins:
+      - name: databricks_job
+        sql: "{CUBE}.job_uuid = {databricks_job}.id"
+        relationship: many_to_one
+
+      - name: databricks_cluster
+        sql: "{CUBE}.id = {databricks_cluster}.run_uuid"
+        relationship: one_to_many
+
+    dimensions:
+      - name: id
+        sql: id
+        type: string
+        primary_key: true
+        public: false
+        meta: {
+          filter: false
+        }
+
+      - name: job_id
+        sql: job_id
+        type: string
+
+      - name: job_uuid
+        sql: job_uuid
+        type: string
+        meta: {
+          filter: false
+        }
+
+      - name: run_id
+        sql: run_id
+        type: string
+
+      - name: creator_username
+        sql: creator_username
+        type: string
+
+      - name: name
+        sql: name
+        type: string
+
+      - name: workspace_id
+        sql: workspace_id
+        type: string
+
+      - name: status
+        sql: status
+        type: string
+
+      - name: run_type
+        sql: run_type
+        type: string
+
+      - name: project_id
+        sql: project_id
+        type: string
+        public: false
+        meta: {
+          filter: false
+        }
+
+      - name: created_at
+        sql: created_at
+        type: time
+
+      - name: updated_at
+        sql: updated_at
+        type: time
+
+      - name: start_time
+        sql: start_time
+        type: time
+
+      - name: end_time
+        sql: end_time
+        type: time
+
+      - name: execution_duration
+        sql: execution_duration
+        type: number
+        meta: {
+          filter: true,
+          unit: milliseconds
+        }
+
+      - name: setup_duration
+        sql: setup_duration
+        type: number
+        meta: {
+          filter: true,
+          unit: milliseconds
+        }
+
+      - name: cleanup_duration
+        sql: cleanup_duration
+        type: number
+        meta: {
+          filter: true,
+          unit: milliseconds
+        }
+
+      - name: run_duration
+        sql: run_duration
+        type: number
+        meta: {
+          filter: true,
+          unit: milliseconds
+        }
+
+    measures:
+      - name: count
+        type: count
+
+      - name: total_execution_duration
+        sql: execution_duration
+        type: sum
+
+      - name: total_setup_duration
+        sql: setup_duration
+        type: sum
+
+      - name: total_cleanup_duration
+        sql: cleanup_duration
+        type: sum
+
+      - name: total_run_duration
+        sql: run_duration
+        type: sum
+
+    pre_aggregations:
+      # Pre-aggregation definitions go here.
+      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
+

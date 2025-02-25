@@ -1,0 +1,8 @@
+cubes:
+  - name: latest_spark_submission
+    extends: spark_submission
+
+    joins:
+      - name: databricks_job_run_metrics
+        sql: "{CUBE}.id = {databricks_job_run_metrics}.id"
+        relationship: one_to_one

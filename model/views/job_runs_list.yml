@@ -1,0 +1,21 @@
+views:
+  - name: job_runs_list
+
+    cubes:
+      - join_path: databricks_performance_summary
+        includes:
+          - name
+          - workspace_id
+          - photon_enabled
+          - autoscale_enabled
+          - compute_type
+          - aws_ebs_enabled
+          - frequency
+          - variance
+          - vcpu_count
+          - avg_run_time
+          - latest_run_date
+          - correlation_value
+          - creator
+          - top_job_score
+

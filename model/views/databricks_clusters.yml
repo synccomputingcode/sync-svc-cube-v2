@@ -1,0 +1,14 @@
+views:
+  - name: databricks_clusters
+
+    cubes:
+      - join_path: databricks_cluster
+        includes:
+          - node_type_id
+          - driver_node_type_id
+          - workspace_id
+          - count
+
+      - join_path: databricks_cluster.databricks_run
+        includes:
+          - end_time

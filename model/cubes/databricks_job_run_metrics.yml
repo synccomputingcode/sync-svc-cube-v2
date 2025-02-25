@@ -1,0 +1,213 @@
+cubes:
+  - name: databricks_job_run_metrics
+    sql: >
+      SELECT *
+      FROM public.databricks_job_run_metrics
+      WHERE sync_tenant_id = '{{ tenant_resolver(COMPILE_CONTEXT.securityContext) | safe }}'
+    data_source: default
+
+    joins:
+      - name: spark_submission
+        sql: "{CUBE}.id = {spark_submission}.id"
+        relationship: one_to_one
+
+      - name: latest_spark_submission
+        sql: "{CUBE}.id = {latest_spark_submission}.id"
+        relationship: one_to_one
+
+    dimensions:
+      - name: id
+        sql: id
+        type: string
+        primary_key: true
+        public: false
+
+      - name: dbx_cost_actual_usd
+        sql: dbx_cost_actual_usd
+        type: number
+        meta: {
+          filter: false
+        }
+
+      - name: aws_ec2_ondemand_cost_actual_usd
+        sql: aws_ec2_ondemand_cost_actual_usd
+        type: number
+        meta: {
+          filter: false
+        }
+
+      - name: aws_ec2_spot_cost_actual_usd
+        sql: aws_ec2_spot_cost_actual_usd
+        type: number
+        meta: {
+          filter: false
+        }
+
+      - name: aws_ebs_gp2_cost_actual_usd
+        sql: aws_ebs_gp2_cost_actual_usd
+        type: number
+        meta: {
+          filter: false
+        }
+
+      - name: aws_ebs_gp3_cost_actual_usd
+        sql: aws_ebs_gp3_cost_actual_usd
+        type: number
+        meta: {
+          filter: false
+        }
+
+      - name: aws_ebs_st1_cost_actual_usd
+        sql: aws_ebs_st1_cost_actual_usd
+        type: number
+        meta: {
+          filter: false
+        }
+
+      - name: azure_vm_ondemand_cost_actual_usd
+        sql: azure_vm_ondemand_cost_actual_usd
+        type: number
+        meta: {
+          filter: false
+        }
+
+      - name: azure_vm_spot_cost_actual_usd
+        sql: azure_vm_spot_cost_actual_usd
+        type: number
+        meta: {
+          filter: false
+        }
+
+
+      - name: workload_core_hours
+        sql: workload_core_hours
+        type: number
+        meta: {
+          filter: false
+        }
+        title: "Core Hours"
+
+      - name: cluster_duration_minutes
+        sql: cluster_duration_minutes
+        type: number
+        meta: {
+          filter: false
+        }
+        title: "Cluster Duration (min.)"
+
+      - name: cluster_cost_actual_usd
+        sql: cluster_cost_actual_usd
+        type: number
+        meta: {
+          filter: false
+        }
+        title: "Cluster Cost"
+
+      - name: spark_duration_minutes
+        sql: spark_duration_minutes
+        type: number
+        meta: {
+          filter: true,
+          unit: mins
+        }
+        title: "Spark Application Duration"
+
+      - name: spark_cost_actual_usd
+        sql: spark_cost_actual_usd
+        type: number
+        meta: {
+          filter: true,
+          unit: usd
+        }
+        title: "Spark Application Cost"
+
+      - name: spark_cost_lower_usd
+        sql: spark_cost_lower_usd
+        type: number
+        meta: {
+          filter: false
+        }
+        public: false
+
+      - name: spark_cost_upper_usd
+        sql: spark_cost_upper_usd
+        type: number
+        meta: {
+          filter: false
+        }
+        public: false
+
+      - name: spark_cost_requested_usd
+        sql: spark_cost_requested_usd
+        type: number
+        meta: {
+          filter: false
+        }
+        public: false
+
+      - name: spark_cost_midpoint_usd
+        sql: spark_cost_midpoint_usd
+        type: number
+        meta: {
+          filter: false
+        }
+        public: false
+
+    measures:
+      - name: count
+        type: count
+
+      - name: total_spark_cost_actual_usd
+        sql: spark_cost_actual_usd
+        type: sum
+
+      - name: total_workload_core_hours
+        sql: workload_core_hours
+        type: sum
+
+      - name: total_dbx_cost_actual_usd
+        title: 'Est Databricks Cost (USD)'
+        sql: dbx_cost_actual_usd
+        type: sum
+
+      - name: total_aws_ec2_ondemand_cost_actual_usd
+        sql: aws_ec2_ondemand_cost_actual_usd
+        type: sum
+
+      - name: total_aws_ec2_spot_cost_actual_usd
+        sql: aws_ec2_spot_cost_actual_usd
+        type: sum
+
+      - name: total_aws_ebs_gp2_cost_actual_usd
+        sql: aws_ebs_gp2_cost_actual_usd
+        type: sum
+
+      - name: total_aws_ebs_gp3_cost_actual_usd
+        sql: aws_ebs_gp3_cost_actual_usd
+        type: sum
+
+      - name: total_aws_ebs_st1_cost_actual_usd
+        sql: aws_ebs_st1_cost_actual_usd
+        type: sum
+
+      - name: total_azure_vm_ondemand_cost_actual_usd
+        sql: azure_vm_ondemand_cost_actual_usd
+        type: sum
+
+      - name: total_azure_vm_spot_cost_actual_usd
+        sql: azure_vm_spot_cost_actual_usd
+        type: sum
+
+      - name: total_aws_cost_actual_usd
+        title: 'Est AWS Cost (USD)'
+        sql: "{total_aws_ec2_ondemand_cost_actual_usd} 
+        + {total_aws_ec2_spot_cost_actual_usd} 
+        + {total_aws_ebs_gp2_cost_actual_usd}
+        + {total_aws_ebs_gp3_cost_actual_usd}
+        + {total_aws_ebs_st1_cost_actual_usd}"
+        type: number
+
+      - name: total_azure_cost_actual_usd
+        title: 'Est Azure Cost (USD)'
+        sql: "{total_azure_vm_ondemand_cost_actual_usd} + {total_azure_vm_spot_cost_actual_usd}"
+        type: number

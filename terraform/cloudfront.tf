@@ -25,20 +25,20 @@ resource "aws_cloudfront_distribution" "sync_svc_cube_cdn" {
     domain_name = local.api_domain_name
     origin_id   = local.api_domain_name
 
-    vpc_origin_config {
-      vpc_origin_id            = aws_cloudfront_vpc_origin.alb.id
-      origin_keepalive_timeout = 5
-      origin_read_timeout      = 30
-    }
-
-    # custom_origin_config {
-    #   http_port                = 80
-    #   https_port               = 443
+    # vpc_origin_config {
+    #   vpc_origin_id            = aws_cloudfront_vpc_origin.alb.id
     #   origin_keepalive_timeout = 5
-    #   origin_protocol_policy   = "match-viewer"
     #   origin_read_timeout      = 30
-    #   origin_ssl_protocols     = ["TLSv1.2"]
     # }
+
+    custom_origin_config {
+      http_port                = 80
+      https_port               = 443
+      origin_keepalive_timeout = 5
+      origin_protocol_policy   = "match-viewer"
+      origin_read_timeout      = 30
+      origin_ssl_protocols     = ["TLSv1.2"]
+    }
   }
 
   default_cache_behavior {

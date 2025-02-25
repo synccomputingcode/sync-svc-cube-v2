@@ -1,0 +1,164 @@
+cubes:
+  - name: project
+    sql: >
+      SELECT *
+      FROM public.project as p
+      WHERE p.active = true 
+        AND (p.model_id = 'UNASSIGNED' OR p.model_id = 'GRADIENT_ML')
+        AND sync_tenant_id = '{{ tenant_resolver(COMPILE_CONTEXT.securityContext) | safe }}'
+    data_source: default
+
+    joins:
+      - name: spark_submission
+        sql: "{CUBE}.id = {spark_submission}.project_id"
+        relationship: one_to_many
+
+      - name: spark_recommendation
+        sql: "{CUBE}.id = {spark_recommendation}.project_id"
+        relationship: one_to_many
+
+      - name: project_insight
+        sql: "{CUBE}.id = {project_insight}.project_id"
+        relationship: one_to_many
+
+      - name: active_project_insight
+        sql: "{CUBE}.id = {active_project_insight}.project_id"
+        relationship: one_to_many
+
+      - name: latest_spark_submission
+        sql: "{CUBE}.latest_submission_id = {latest_spark_submission}.id"
+        relationship: one_to_one
+
+      - name: latest_spark_recommendation
+        sql: "{CUBE}.latest_recommendation_id = {latest_spark_recommendation}.id"
+        relationship: one_to_one
+
+      - name: databricks_cluster
+        sql: "{CUBE}.id = {databricks_cluster}.project_id"
+        relationship: one_to_many
+
+      - name: databricks_job_cluster_spec
+        sql: "{CUBE}.id = {databricks_job_cluster_spec}.project_id"
+        relationship: one_to_one
+
+      - name: project_roi_stats
+        sql: "{CUBE}.latest_roi_stats_id = {project_roi_stats}.id"
+        relationship: one_to_one
+
+      - name: project_settings
+        sql: "{CUBE}.project_settings_id = {project_settings}.id"
+        relationship: one_to_one
+
+      - name: spark_project_sequence_step
+        sql: "{CUBE}.project_sequence_step_id = {spark_project_sequence_step}.id"
+        relationship: one_to_one
+
+      - name: project_insight
+        sql: "{CUBE}.id = {project_insight}.project_id"
+        relationship: one_to_many
+
+      - name: active_project_insight
+        sql: "{CUBE}.id = {active_project_insight}.project_id"
+        relationship: one_to_many
+
+    dimensions:
+      - name: id
+        sql: id
+        type: string
+        primary_key: true
+        meta: {
+          type: 'uuid'
+        }
+
+      - name: project_settings_id
+        sql: project_settings_id
+        type: string
+        public: false
+        primary_key: true
+        meta: {
+          type: 'uuid'
+        }
+
+      - name: active
+        sql: active
+        type: boolean
+        meta: {
+          filter: false
+        }
+
+      - name: product_code
+        sql: product_code
+        title: "Type"
+        type: string
+        meta: {
+          filter: true,
+          type: 'select',
+          options: [
+            "azure-databricks",
+            "aws-databricks"
+          ]
+        }
+
+      - name: app_id
+        sql: app_id
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: creator_id
+        sql: creator_id
+        type: string
+        meta: {
+          filter: false
+        }
+
+      - name: model_id
+        sql: model_id
+        type: string
+        meta: {
+          filter: false
+        }
+        public: false
+
+      - name: workflow_id
+        sql: workflow_id
+        type: string
+        meta: {
+          filter: false
+        }
+
+      - name: estimated_savings
+        sql: estimated_savings
+        type: string
+        meta: {
+          filter: false
+        }
+
+      - name: created_at
+        sql: created_at
+        type: time
+        meta: {
+          filter: false
+        }
+
+      - name: updated_at
+        sql: updated_at
+        type: time
+        meta: {
+          filter: false
+        }
+
+    measures:
+      - name: count
+        type: count
+
+      - name: total_auto_apply_recs
+        type: count
+        sql: project_settings.auto_apply_recs
+        filters:
+          - sql: "{project_settings}.auto_apply_recs = true"
+
+      - name: total_estimated_savings
+        type: sum
+        sql: estimated_savings

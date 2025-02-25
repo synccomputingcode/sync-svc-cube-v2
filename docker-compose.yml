@@ -1,0 +1,10 @@
+version: "2.2"
+
+services:
+  cube:
+    image: sync-cube-image
+    ports:
+      - 4000:4000
+      - 15432:15432
+    volumes:
+      - .:/cube/conf

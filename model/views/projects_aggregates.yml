@@ -1,0 +1,31 @@
+views:
+  - name: projects_aggregates
+
+    cubes:
+      - join_path: project
+        includes:
+          - count
+
+      - join_path: project.project_roi_stats
+        includes:
+          - total_savings_to_date
+          - total_projected_annual_savings
+
+      - join_path: project.project_settings
+        includes:
+          - total_auto_apply_recs
+
+      - join_path: project.spark_submission
+        includes:
+          - total_recs_applied
+          - sla_status_met_percent
+          - total_dev_hours
+
+      - join_path: project.spark_recommendation
+        includes:
+          - count_pending_setups
+
+      - join_path: project.spark_submission.databricks_job_run_metrics
+        includes:
+          - total_workload_core_hours
+          - total_spark_cost_actual_usd

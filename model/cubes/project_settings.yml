@@ -1,0 +1,138 @@
+cubes:
+  - name: project_settings
+    sql: >
+      SELECT *
+      FROM public.project_settings
+      WHERE sync_tenant_id = '{{ tenant_resolver(COMPILE_CONTEXT.securityContext) | safe }}'
+    data_source: default
+
+    joins:
+      - name: project
+        sql: "{CUBE}.id = {project}.project_settings_id"
+        relationship: one_to_one
+
+      - name: databricks_job
+        sql: "{CUBE}.job_id = {databricks_job}.job_id AND {CUBE}.sync_tenant_id = {databricks_job}.sync_tenant_id"
+        relationship: many_to_one
+
+    dimensions:
+      - name: id
+        sql: id
+        type: string
+        primary_key: true
+        meta: {
+          type: 'uuid'
+        }
+
+      - name: project_id
+        sql: project_id
+        type: string
+        meta: {
+          type: 'uuid'
+        }
+
+      - name: job_id
+        sql: job_id
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: workspace_id
+        sql: workspace_id
+        type: string
+        meta: {
+          type: 'uuid'
+        }
+
+      - name: name
+        sql: name
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: description
+        sql: description
+        type: string
+        meta: {
+          filter: false
+        }
+
+      - name: cluster_path
+        sql: cluster_path
+        type: string
+        meta: {
+          filter: false
+        }
+
+      - name: auto_apply_recs
+        sql: auto_apply_recs
+        type: boolean
+        meta: {
+          filter: true
+        }
+        title: "Auto Apply Recommendations"
+
+      - name: optimize_instance_size
+        sql: optimize_instance_size
+        type: boolean
+        meta: {
+          filter: false
+        }
+
+      - name: optimize_worker_size
+        sql: optimize_worker_size
+        type: boolean
+        meta: {
+          filter: false
+        }
+
+      - name: project_periodicity_type
+        sql: project_periodicity_type
+        type: boolean
+        meta: {
+          filter: false
+        }
+
+      - name: hardware_override
+        sql: hardware_override
+        type: string
+        meta: {
+          filter: false
+        }
+
+      - name: sla_minutes
+        sql: sla_minutes
+        type: number
+        meta: {
+          filter: false
+        }
+
+      - name: fix_scaling_type
+        sql: fix_driver_type
+        type: boolean
+        meta: {
+          filter: false
+        }
+
+      - name: created_at
+        sql: created_at
+        type: time
+        meta: {
+          filter: false
+        }
+
+      - name: updated_at
+        sql: updated_at
+        type: time
+        meta: {
+          filter: false
+        }
+
+    measures:
+      - name: total_auto_apply_recs
+        type: count
+        sql: auto_apply_recs
+        filters:
+          - sql: "{CUBE}.auto_apply_recs = true"
