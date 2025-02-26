@@ -37,17 +37,17 @@ jobs:
 
       - name: Update cube-api Task Definition with latest image
         id: cube-api-task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@c804dfbdd57f713b6c079302a4c01db7017a36fc
+        uses: aws-actions/amazon-ecs-render-task-definition@v1.6.2
         with:
-          task-definition: cube_api
+          task-definition-family: cube_api
           container-name: cube-api
           image: sync-svc-cube:${{ github.sha }}
 
       - name: Update cube-refresh-worker Task Definition with latest image
         id: cube-refresh-worker-task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@c804dfbdd57f713b6c079302a4c01db7017a36fc
+        uses: aws-actions/amazon-ecs-render-task-definition@v1.6.2
         with:
-          task-definition: cube_refresh_worker
+          task-definition-family: cube_refresh_worker
           container-name: cube-refresh-worker
           image: sync-svc-cube:${{ github.sha }}
 
