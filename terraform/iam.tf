@@ -57,7 +57,8 @@ resource "aws_iam_policy" "sync_svc_cube_ecr_policy" {
         "Effect" : "Allow",
         "Action" : [
           "ecs:DescribeTaskDefinition",
-          "ecs:RegisterTaskDefinition"
+          "ecs:RegisterTaskDefinition",
+          "ecs:DescribeServices"
         ],
         "Resource" : "*"
       },
