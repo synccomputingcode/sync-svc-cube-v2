@@ -35,12 +35,34 @@ jobs:
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
 
-      - uses: prefix-dev/setup-pixi@v0.8.3
-        with:
-          cache: true
-          locked: true
       - name: Update cube-api Task Definition with latest image
-        run: pixi run python scripts/update_task.py --task-definition cube_api --container-name cube-api --image sync-svc-cube:${{ github.sha }}
+        id: cube-api-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@c804dfbdd57f713b6c079302a4c01db7017a36fc
+        with:
+          task-definition: cube_api
+          container-name: cube-api
+          image: sync-svc-cube:${{ github.sha }}
 
       - name: Update cube-refresh-worker Task Definition with latest image
-        run: pixi run python scripts/update_task.py --task-definition cube_refresh_worker --container-name cube-refresh-worker --image sync-svc-cube:${{ github.sha }}
+        id: cube-refresh-worker-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@c804dfbdd57f713b6c079302a4c01db7017a36fc
+        with:
+          task-definition: cube_refresh_worker
+          container-name: cube-refresh-worker
+          image: sync-svc-cube:${{ github.sha }}
+
+      - name: Deploy cube-api task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@df9643053eda01f169e64a0e60233aacca83799a
+        with:
+          task-definition: ${{ steps.cube-api-task-def.outputs.task-definition }}
+          service: cube_api
+          cluster: production
+          wait-for-service-stability: true
+
+      - name: Deploy cube-refresh-worker task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@df9643053eda01f169e64a0e60233aacca83799a
+        with:
+          task-definition: ${{ steps.cube-refresh-worker-task-def.outputs.task-definition }}
+          service: cube_refresh_worker
+          cluster: production
+          wait-for-service-stability: true
