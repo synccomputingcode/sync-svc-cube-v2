@@ -1,0 +1,47 @@
+cubes:
+  - name: spark_project_sequence_step
+    sql: >
+      SELECT *
+      FROM public.spark_project_sequence_step
+      WHERE sync_tenant_id = '{{ tenant_resolver(COMPILE_CONTEXT.securityContext) | safe }}'
+    data_source: default
+
+    joins:
+      - name: project
+        sql: "{CUBE}.id = {project}.project_sequence_step_id"
+        relationship: one_to_one
+
+      - name: spark_recommendation
+        sql: "{CUBE}.id = {spark_recommendation}.project_sequence_step_id"
+        relationship: one_to_one
+
+
+    dimensions:
+      - name: id
+        sql: id
+        type: string
+        primary_key: true
+        meta: {
+          type: 'uuid'
+        }
+
+      - name: phase
+        case:
+          when:
+            - sql: "{CUBE}.phase = 'LEARNING' OR {CUBE}.phase = 'REBASING'"
+              label: LEARNING
+            - sql: "{CUBE}.phase = 'OPTIMIZING'"
+              label: OPTIMIZING
+            - sql: "{CUBE}.phase is NULL"
+              label: MONITORING
+        type: string
+        meta: {
+          filter: true,
+          type: 'select',
+          options: [
+            "LEARNING",
+            "OPTIMIZING",
+            "MONITORING"
+          ]
+        }
+        title: "Gradient State"

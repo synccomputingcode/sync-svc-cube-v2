@@ -1,0 +1,163 @@
+cubes:
+  - name: databricks_performance_summary
+    sql: >
+      SELECT *
+      FROM databricks_performance_summary
+      WHERE sync_tenant_id = '{{ tenant_resolver(COMPILE_CONTEXT.securityContext) | safe }}'
+    data_source: default
+    joins: []
+
+    dimensions:
+      - name: id
+        sql: id
+        public: false
+        type: string
+        primary_key: true
+        meta: {
+          filter: true
+        }
+
+      - name: name
+        sql: name
+        title: 'Job'
+        public: true
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: workspace_id
+        sql: workspace_id
+        title: 'Workspace ID'
+        public: true
+        type: string
+        meta: {
+          filter: false
+        }
+
+      - name: correlation_value
+        sql: correlation_value
+        public: true
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: correlation_value_type
+        sql: correlation_value_type
+        public: false
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: photon_enabled
+        sql: photon_enabled
+        public: true
+        type: boolean
+        meta: {
+          filter: true
+        }
+
+      - name: autoscale_enabled
+        sql: autoscale_enabled
+        public: true
+        type: boolean
+        meta: {
+          filter: true
+        }
+
+      - name: compute_type
+        sql: compute_type
+        title: 'Compute'
+        public: true
+        type: string
+        meta: {
+          filter: true,
+          type: 'select',
+          options: [
+            "ALL_PURPOSE",
+            "JOBS",
+            "JOBS_LIGHT"
+          ]
+        }
+
+      - name: aws_ebs_enabled
+        sql: aws_ebs_enabled
+        title: 'AWS EBS Enabled'
+        public: true
+        type: boolean
+        meta: {
+          filter: true
+        }
+
+      - name: frequency
+        sql: frequency
+        public: true
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: variance
+        sql: variance
+        public: true
+        type: number
+        meta: {
+          filter: true
+        }
+
+      - name: vcpu_count
+        sql: vcpu_count
+        title: 'Total vCPU'
+        public: true
+        type: number
+        meta: {
+          filter: true
+        }
+
+      - name: avg_run_time
+        sql: avg_run_time
+        title: 'Avg Runtime'
+        public: true
+        type: number
+        meta: {
+          filter: true
+        } 
+
+      - name: top_job_score
+        sql: top_job_score
+        public: false
+        type: number
+        meta: {
+          filter: true
+        }
+
+      - name: latest_run_date
+        sql: latest_run_date
+        type: time
+        meta: {
+          filter: true
+        }
+
+      - name: creator
+        sql: creator
+        public: true
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: created_at
+        sql: created_at
+        type: time
+        meta: {
+          filter: false
+        }
+
+      - name: updated_at
+        sql: updated_at
+        type: time
+        meta: {
+          filter: false
+        }

@@ -1,0 +1,11 @@
+views:
+  - name: job_runs_charts
+
+    cubes:
+      - join_path: health_check_aggregate
+        includes:
+          - id
+          - date
+          - workspace_id
+          - agg_run_count
+          - agg_core_hours

@@ -1,0 +1,99 @@
+cubes:
+  - name: spark_recommendation
+    sql: >
+      SELECT *
+      FROM public.spark_recommendation
+      WHERE sync_tenant_id = '{{ tenant_resolver(COMPILE_CONTEXT.securityContext) | safe }}' AND active = 'true'
+    data_source: default
+    joins:
+      - name: project
+        sql: "{CUBE}.project_id = {project}.id"
+        relationship: many_to_one
+
+    dimensions:
+      - name: id
+        sql: id
+        type: string
+        primary_key: true
+
+      - name: active
+        sql: active
+        type: boolean
+        meta: {
+          filter: false
+        }
+
+      - name: creator_id
+        sql: creator_id
+        type: string
+        meta: {
+          filter: false
+        }
+
+      - name: project_id
+        sql: project_id
+        type: string
+        meta: {
+          filter: false
+        }
+
+      - name: state
+        type: string
+        case:
+          when:
+            - sql: "{CUBE}.state = 'PENDING' OR {CUBE}.state IS NULL"
+              label: pending_setup
+            - sql: "{CUBE}.state = 'SUCCESS'"
+              label: healthy
+            - sql: "{CUBE}.state = 'FAILURE'"
+              label: unhealthy
+        meta: {
+          filter: true,
+          options: [
+            "pending_setup",
+            "healthy",
+            "unhealthy"
+          ]
+        }
+
+      - name: error
+        sql: error
+        type: string
+        meta: {
+          filter: false
+        }
+
+      - name: model_name
+        sql: model_name
+        type: string
+        meta: {
+          filter: false
+        }
+
+      - name: created_at
+        sql: created_at
+        type: time
+        meta: {
+          filter: false
+        }
+
+      - name: state_updated_at
+        sql: state_updated_at
+        type: time
+        meta: {
+          filter: false
+        }
+
+    measures:
+      - name: count
+        type: count
+      
+      - name: count_pending_setups
+        type: count
+        sql: "{CUBE}.state = 'PENDING' OR {CUBE}.state IS NULL"
+
+
+    pre_aggregations:
+    # Pre-aggregation definitions go here.
+    # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
+

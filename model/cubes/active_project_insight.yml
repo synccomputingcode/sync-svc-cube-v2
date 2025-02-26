@@ -1,0 +1,27 @@
+cubes:
+  - name: active_project_insight
+    sql: >
+      SELECT 
+          project_id,
+          string_agg(project_insight_rule_name, ',' ORDER BY project_insight_rule_name) AS active_insight_rule_names
+      FROM public.expl_project_insight
+      WHERE sync_tenant_id = '{{ tenant_resolver(COMPILE_CONTEXT.securityContext) | safe }}'
+        AND ended_at IS NULL
+        AND project_insight_rule_name NOT IN ('InsightsEnabled', 'ScheduledInsightsEnabled')
+      GROUP BY project_id
+    data_source: default
+    extends: project_insight
+
+    joins:
+      - name: project
+        sql: "{CUBE}.project_id = {project}.id"
+        relationship: many_to_one
+
+    dimensions:
+      - name: active_insight_rule_names
+        sql: active_insight_rule_names
+        type: string
+        title: "Insights"
+        meta: {
+          filter: true
+        }

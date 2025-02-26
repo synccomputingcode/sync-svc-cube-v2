@@ -1,0 +1,153 @@
+cubes:
+  - name: spark_submission
+    sql: >
+      SELECT *
+      FROM public.spark_submission
+      WHERE sync_tenant_id = '{{ tenant_resolver(COMPILE_CONTEXT.securityContext) | safe }}' 
+        AND active = 'true'
+    data_source: default
+
+    joins:
+      - name: project
+        sql: "{CUBE}.project_id = {project}.id"
+        relationship: many_to_one
+
+      - name: databricks_job_run_metrics
+        sql: "{CUBE}.id = {databricks_job_run_metrics}.id"
+        relationship: one_to_one
+
+      - name: databricks_cluster
+        sql: "{CUBE}.cluster_id = {databricks_cluster}.cluster_id AND {CUBE}.run_id = {databricks_cluster}.run_id AND {CUBE}.sync_tenant_id = {databricks_cluster}.sync_tenant_id"
+        relationship: one_to_one
+
+    dimensions:
+      - name: id
+        sql: id
+        type: string
+        primary_key: true
+
+      - name: creator_id
+        sql: creator_id
+        type: string
+        meta: {
+          filter: false
+        }
+
+      - name: unique_id
+        sql: unique_id
+        type: string
+        meta: {
+          filter: false
+        }
+
+      - name: active
+        sql: active
+        type: string
+        meta: {
+          filter: false
+        }
+
+      - name: implemented_recommendation_id
+        sql: implemented_recommendation_id
+        type: string
+        meta: {
+          filter: false
+        }
+        title: "Applied Recommendation ID"
+
+      - name: project_id
+        sql: project_id
+        type: string
+        meta: {
+          filter: false
+        }
+
+      - name: active_for_optimization
+        sql: active_for_optimization
+        type: boolean
+        meta: {
+          filter: false
+        }
+
+      - name: state
+        sql: state
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: job_status
+        sql: job_status
+        type: string
+        meta: {
+          filter: true
+        }
+        title: "Job Status"
+
+      - name: error
+        sql: error
+        type: string
+        meta: {
+          filter: false
+        }
+
+      - name: created_at
+        sql: created_at
+        type: time
+        meta: {
+          filter: false
+        }
+
+      - name: state_updated_at
+        sql: state_updated_at
+        type: time
+        meta: {
+          filter: true
+        }
+        title: "Last Monitored Date"
+
+      - name: _sort_state_updated_at
+        sql: "coalesce(state_updated_at, '1900-01-01')"
+        type: time
+        meta: {
+          filter: true
+        }
+
+      - name: sla_minutes
+        sql: sla_minutes
+        type: time
+        meta: {
+          filter: false
+        }
+        title: "SLA (min.)"
+
+      - name: sla_status
+        sql: sla_status
+        type: string
+        meta: {
+          filter: false
+        }
+        title: "SLA Status"
+
+    measures:
+      - name: count
+        type: count
+
+      - name: total_recs_applied
+        sql: implemented_recommendation_id
+        type: count
+
+      - name: total_dev_hours
+        sql: "({total_recs_applied} * 30) / 60"
+        type: number
+
+      - name: total_sla_status_met
+        sql: sla_status
+        type: count
+        filters:
+          - sql: "{CUBE}.sla_status = 'MET'"
+
+      - name: sla_status_met_percent
+        sql: "(CAST({total_sla_status_met} as decimal) / NULLIF(CAST({count} as decimal), 0)) * 100.0"
+        type: number
+        format: percent

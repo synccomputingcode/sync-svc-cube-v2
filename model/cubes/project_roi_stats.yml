@@ -1,0 +1,115 @@
+cubes:
+  - name: project_roi_stats
+    sql: >
+      SELECT *
+      FROM public.project_roi_stats
+      WHERE sync_tenant_id = '{{ tenant_resolver(COMPILE_CONTEXT.securityContext) | safe }}'
+    data_source: default
+
+    joins:
+      - name: project
+        sql: "{CUBE}.id = {project}.latest_roi_stats_id"
+        relationship: one_to_one
+
+    dimensions:
+      - name: id
+        sql: id
+        type: string
+        primary_key: true
+        public: false
+        meta: {
+          filter: false
+        }
+
+      - name: project_id
+        sql: project_id
+        type: string
+        meta: {
+          filter: false
+        }
+
+      - name: created_at
+        sql: created_at
+        type: time
+        meta: {
+          filter: false
+        }
+
+      - name: updated_at
+        sql: updated_at
+        type: time
+        meta: {
+          filter: false
+        }
+
+      - name: mean_dollar_cost_unoptimized
+        sql: mean_dollar_cost_unoptimized
+        type: number
+        meta: {
+          filter: false
+        }
+
+      - name: mean_dollar_cost_optimized
+        sql: mean_dollar_cost_optimized
+        type: number
+        meta: {
+          filter: false
+        }
+
+      - name: savings_to_date
+        title: "Savings to Date"
+        type: number
+        case:
+          when:
+            - sql: "{CUBE}.dollar_savings_to_date < 0"
+              label:
+                sql: "NULL"
+          else:
+            label:
+              sql: "{CUBE}.dollar_savings_to_date"
+        meta: {
+          filter: true,
+          unit: usd
+        }
+
+      - name: projected_annual_savings
+        type: number
+        title: "Projected Annual Savings"
+        case:
+          when:
+            - sql: "{CUBE}.projected_dollar_savings_annual < 0"
+              label:
+                sql: "NULL"
+          else:
+            label:
+              sql: "{CUBE}.projected_dollar_savings_annual"
+        meta: {
+          filter: true,
+          unit: usd
+        }
+
+      - name: cost_percent_change
+        type: number
+        sql: "(
+          ({mean_dollar_cost_optimized} - {mean_dollar_cost_unoptimized}) / 
+          NULLIF(CAST({mean_dollar_cost_unoptimized} as decimal), 0)
+        ) * 100"
+        title: "Cost Change %"
+        meta: {
+          type: 'percent'
+        }
+
+    measures:
+
+      - name: total_savings_to_date
+        sql: "{savings_to_date}"
+        type: sum
+
+      - name: total_projected_annual_savings
+        sql: "{projected_annual_savings}"
+        type: sum
+
+    pre_aggregations:
+    # Pre-aggregation definitions go here.
+    # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
+

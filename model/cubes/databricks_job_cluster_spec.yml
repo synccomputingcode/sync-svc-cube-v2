@@ -1,0 +1,290 @@
+cubes:
+  - name: databricks_job_cluster_spec
+    sql: >
+      SELECT *
+      FROM databricks_job_cluster_spec
+      WHERE sync_tenant_id = '{{ tenant_resolver(COMPILE_CONTEXT.securityContext) | safe }}'
+    data_source: default
+
+    joins:
+      - name: databricks_job
+        sql: "{CUBE}.job_uuid = {databricks_job}.id"
+        relationship: many_to_one
+
+      - name: databricks_job_cluster_tags
+        sql: "{CUBE}.id = {databricks_job_cluster_tags}.job_cluster_spec_id"
+        relationship: one_to_one
+
+      - name: project
+        sql: "{CUBE}.project_id = {project}.id"
+        relationship: one_to_one
+
+    dimensions:
+      - name: id
+        sql: id
+        type: string
+        primary_key: true
+        public: false
+        meta: {
+          filter: false
+        }
+
+      - name: workspace_id
+        sql: workspace_id
+        public: true
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: job_uuid
+        sql: job_uuid
+        public: false
+        type: string
+        meta: {
+          filter: false
+        }
+
+      - name: job_id
+        sql: job_id
+        public: true
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: photon_enabled
+        sql: photon_enabled
+        public: true
+        type: boolean
+        meta: {
+          filter: true
+        }
+
+      - name: is_apc
+        sql: is_apc
+        public: true
+        type: boolean
+        meta: {
+          filter: false
+        }
+
+      - name: autoscaling_enabled
+        sql: autoscaling_enabled
+        public: true
+        type: boolean
+        meta: {
+          filter: true
+        }
+
+      - name: cluster_log_destination
+        sql: cluster_log_destination
+        public: true
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: cluster_log_region
+        sql: cluster_log_region
+        public: true
+        type: string
+
+
+      - name: spark_jar_task
+        sql: spark_jar_task
+        public: true
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: notebook_path
+        sql: notebook_path
+        public: true
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: compute_type
+        sql: compute_type
+        public: true
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: autoscale_min_workers
+        sql: autoscale_min_workers
+        public: true
+        type: number
+        meta: {
+          filter: true
+        }
+
+      - name: autoscale_max_workers
+        sql: autoscale_max_workers
+        public: true
+        type: number
+        meta: {
+          filter: true
+        }
+
+      - name: num_workers
+        sql: num_workers
+        public: true
+        type: number
+        meta: {
+          filter: true
+        }
+
+      - name: runtime_engine
+        sql: runtime_engine
+        public: true
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: ebs_volume_count
+        sql: ebs_volume_count
+        public: true
+        type: number
+        meta: {
+          filter: true
+        }
+
+      - name: ebs_volume_type
+        sql: ebs_volume_type
+        public: true
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: ebs_volume_size
+        sql: ebs_volume_size
+        public: true
+        type: number
+        meta: {
+          filter: true
+        }
+
+      - name: ebs_volume_iops
+        sql: ebs_volume_iops
+        public: true
+        type: number
+        meta: {
+          filter: true
+        }
+
+      - name: cluster_path
+        sql: cluster_path
+        public: true
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: cluster_name
+        sql: cluster_name
+        public: true
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: spark_version
+        sql: spark_version
+        public: true
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: node_type_id
+        sql: node_type_id
+        public: true
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: driver_node_type_id
+        sql: driver_node_type_id
+        public: true
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: autotermination_minutes
+        sql: autotermination_minutes
+        public: true
+        type: number
+
+      - name: enable_elastic_disk
+        sql: enable_elastic_disk
+        public: true
+        type: boolean
+
+      - name: enable_local_disk_encryption
+        sql: enable_local_disk_encryption
+        public: true
+        type: boolean
+
+      - name: num_workers
+        sql: num_workers
+        public: true
+        type: number
+        meta: {
+          filter: true
+        }
+
+      - name: data_security_mode
+        sql: data_security_mode
+        public: true
+        type: string
+
+      - name: first_on_demand
+        sql: first_on_demand
+        public: true
+        type: number
+
+      - name: availability
+        sql: availability
+        public: true
+        type: string
+
+      - name: aws_zone_id
+        sql: aws_zone_id
+        public: true
+        type: string
+
+      - name: aws_instance_profile_arn
+        sql: aws_instance_profile_arn
+        public: true
+        type: string
+
+      - name: workspace_id
+        sql: workspace_id
+        public: true
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: created_at
+        sql: created_at
+        type: time
+        meta: {
+          filter: false
+        }
+
+      - name: updated_at
+        sql: updated_at
+        type: time
+        meta: {
+          filter: false
+        }

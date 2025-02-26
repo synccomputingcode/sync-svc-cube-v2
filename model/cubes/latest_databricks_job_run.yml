@@ -1,0 +1,23 @@
+cubes:
+  - name: latest_databricks_job_run
+    data_source: default
+    extends: databricks_run
+    sql: >
+      SELECT latest_run.*
+      FROM (
+          SELECT
+              latest_databricks_job_run.*,
+              ROW_NUMBER() OVER (PARTITION BY latest_databricks_job_run.job_uuid ORDER BY latest_databricks_job_run.start_time DESC) AS rn
+          FROM public.databricks_run latest_databricks_job_run
+          WHERE latest_databricks_job_run.sync_tenant_id = '{{ tenant_resolver(COMPILE_CONTEXT.securityContext) | safe }}' AND latest_databricks_job_run.job_uuid IS NOT NULL
+      ) latest_run
+      WHERE latest_run.rn = 1
+
+    joins:
+      - name: databricks_job
+        sql: "{CUBE}.job_uuid = {databricks_job}.id"
+        relationship: many_to_one
+
+      - name: databricks_cluster
+        sql: "{CUBE}.id = {databricks_cluster}.run_uuid"
+        relationship: one_to_many

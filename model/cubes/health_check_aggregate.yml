@@ -1,0 +1,56 @@
+cubes:
+  - name: health_check_aggregate
+    sql: >
+      SELECT *
+      FROM health_check_aggregate
+      WHERE sync_tenant_id = '{{ tenant_resolver(COMPILE_CONTEXT.securityContext) | safe }}'
+    data_source: default
+
+    joins: [ ]
+
+    dimensions:
+      - name: id
+        sql: id
+        type: string
+        primary_key: true
+        public: false
+        meta: {
+          filter: true
+        }
+
+      - name: date
+        sql: date
+        type: time
+        meta: {
+          filter: false
+        }
+
+      - name: workspace_id
+        sql: workspace_id
+        public: true
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: core_hours
+        sql: core_hours
+        public: true
+        type: number
+
+      - name: run_count
+        sql: run_count
+        public: true
+        type: number
+
+    measures:
+      - name: count
+        type: count
+
+      - name: agg_run_count
+        type: sum
+        sql: run_count
+
+      - name: agg_core_hours
+        type: sum
+        sql: core_hours

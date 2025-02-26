@@ -1,0 +1,19 @@
+views:
+  - name: candidates_list
+
+    cubes:
+      - join_path: eligible_databricks_job_cluster_spec
+        includes: "*"
+
+      - join_path: eligible_databricks_job_cluster_spec.databricks_job
+        prefix: true
+        includes: "*"
+        excludes:
+          - job_id
+
+      - join_path: eligible_databricks_job_cluster_spec.databricks_job.latest_databricks_job_run
+        prefix: true
+        includes: "*"
+        excludes:
+          - job_id
+          - workspace_id

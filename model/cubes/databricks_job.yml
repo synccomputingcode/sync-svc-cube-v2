@@ -1,0 +1,102 @@
+cubes:
+  - name: databricks_job
+    sql: >
+      SELECT *
+      FROM public.databricks_job
+      WHERE sync_tenant_id = '{{ tenant_resolver(COMPILE_CONTEXT.securityContext) | safe }}' AND status = 'active'
+    data_source: default
+
+    joins:
+      - name: databricks_run
+        sql: "{CUBE}.id = {databricks_run}.job_uuid"
+        relationship: one_to_many
+
+      - name: latest_databricks_job_run
+        sql: "{CUBE}.id = {latest_databricks_job_run}.job_uuid"
+        relationship: one_to_one
+
+      - name: databricks_job_cluster_spec
+        sql: "{CUBE}.id = {databricks_job_cluster_spec}.job_uuid"
+        relationship: one_to_many
+
+    dimensions:
+      - name: id
+        sql: id
+        type: string
+        primary_key: true
+        public: false
+        meta: {
+          filter: false
+        }
+
+      - name: description
+        sql: description
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: job_creator
+        sql: job_creator
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: job_id
+        sql: job_id
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: status
+        sql: status
+        type: string
+        meta: {
+          filter: false
+        }
+
+      - name: name
+        sql: name
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: workspace_id
+        sql: workspace_id
+        type: string
+        meta: {
+          filter: true
+        }
+
+      - name: job_created_time
+        sql: job_created_time
+        type: time
+        meta: {
+          filter: true
+        }
+
+      - name: created_at
+        sql: created_at
+        type: time
+        meta: {
+          filter: false
+        }
+
+      - name: updated_at
+        sql: updated_at
+        type: time
+        meta: {
+          filter: false
+        }
+
+    measures:
+      - name: count
+        type: count
+
+    pre_aggregations:
+    # Pre-aggregation definitions go here.
+    # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
+

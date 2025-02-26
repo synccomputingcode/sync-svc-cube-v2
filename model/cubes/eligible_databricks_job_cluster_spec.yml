@@ -1,0 +1,13 @@
+cubes:
+  - name: eligible_databricks_job_cluster_spec
+    sql: >
+      SELECT *
+      FROM databricks_job_cluster_spec AS eligible_databricks_job_cluster_spec
+      WHERE eligible_databricks_job_cluster_spec.sync_tenant_id = '{{ tenant_resolver(COMPILE_CONTEXT.securityContext) | safe }}' AND eligible_databricks_job_cluster_spec.is_apc = false AND eligible_databricks_job_cluster_spec.project_id IS NULL
+    data_source: default
+    extends: databricks_job_cluster_spec
+
+    joins:
+      - name: databricks_job
+        sql: "{CUBE}.job_uuid = {databricks_job}.id"
+        relationship: many_to_one

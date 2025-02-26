@@ -1,0 +1,42 @@
+cubes:
+  - name: project_insight
+    sql: >
+      SELECT *
+      FROM public.expl_project_insight as i
+      WHERE sync_tenant_id = '{{ tenant_resolver(COMPILE_CONTEXT.securityContext) | safe }}'
+    data_source: default
+
+    joins:
+      - name: project
+        sql: "{CUBE}.project_id = {project}.id"
+        relationship: many_to_one
+
+    dimensions:
+      - name: id
+        sql: id
+        type: string
+        primary_key: true
+
+      - name: sync_tenant_id
+        sql: sync_tenant_id
+        type: string
+
+      - name: project_id
+        sql: project_id
+        type: string
+
+      - name: project_insight_rule_name
+        sql: project_insight_rule_name
+        type: string
+
+      - name: insight_ended_at
+        sql: ended_at
+        type: time
+
+      - name: insight_created_at
+        sql: created_at
+        type: time
+
+      - name: insight_updated_at
+        sql: updated_at
+        type: time

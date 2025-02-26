@@ -1,0 +1,54 @@
+views:
+  - name: projects_charts
+    meta: {
+      categories: [
+        {
+          name: 'cost_breakdown',
+          type: 'string',
+          shortTitle: 'Cost Breakdown By Service',
+          measures: [
+            'projects_charts.total_dbx_cost_actual_usd',
+            'projects_charts.total_aws_cost_actual_usd',
+            'projects_charts.total_azure_cost_actual_usd',
+          ]
+        },
+        {
+          name: 'auto_apply_recs',
+          type: 'boolean',
+          shortTitle: 'Auto Apply Recommendations',
+          measures: ['projects_charts.total_spark_cost_actual_usd'],
+          dimensions: ['projects_charts.auto_apply_recs']
+        },
+        {
+          name: 'name',
+          type: 'string',
+          shortTitle: 'Project Name',
+          measures: ['projects_charts.total_spark_cost_actual_usd'],
+          dimensions: ['projects_charts.name']
+        }
+      ]
+    }
+
+    cubes:
+      - join_path: project
+        includes:
+          - id
+
+      - join_path: project.project_settings
+        includes:
+          - auto_apply_recs
+          - name
+
+      - join_path: project.spark_submission
+        includes:
+          - project_id
+          - sla_status_met_percent
+          - created_at
+
+      - join_path: project.spark_submission.databricks_job_run_metrics
+        includes:
+          - total_aws_cost_actual_usd
+          - total_azure_cost_actual_usd
+          - total_dbx_cost_actual_usd
+          - total_workload_core_hours
+          - total_spark_cost_actual_usd

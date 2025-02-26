@@ -1,0 +1,63 @@
+views:
+  - name: projects_list
+
+    cubes:
+      - join_path: project
+        includes:
+          - id
+          - product_code
+          - app_id
+          - updated_at
+
+      - join_path: project.project_settings
+        includes:
+          - name
+          - description
+          - workspace_id
+          - auto_apply_recs
+
+      - join_path: project.latest_spark_submission
+        prefix: true
+        includes:
+          - state
+          - job_status
+          - state_updated_at
+
+      - join_path: project.latest_spark_submission.databricks_job_run_metrics
+        prefix: true
+        includes:
+          - name: spark_cost_actual_usd
+            alias: spark_cost_usd
+          - name: spark_duration_minutes
+            alias: spark_duration_mins
+
+      - join_path: project.latest_spark_recommendation
+        prefix: true
+        includes:
+          - state
+
+      - join_path: project.project_settings.databricks_job
+        prefix: true
+        includes:
+          - name
+          - description
+          - job_creator
+          - job_created_time
+          - job_id
+
+      - join_path: project.project_roi_stats
+        prefix: true
+        includes:
+          - savings_to_date
+          - projected_annual_savings
+          - cost_percent_change
+
+      - join_path: project.spark_project_sequence_step
+        prefix: true
+        includes:
+          - phase
+
+      - join_path: project.active_project_insight
+        prefix: true
+        includes:
+          - active_insight_rule_names

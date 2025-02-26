@@ -1,0 +1,10 @@
+cubes:
+  - name: latest_spark_recommendation
+    sql: >
+      SELECT *
+      FROM public.spark_recommendation
+      WHERE sync_tenant_id = '{{ tenant_resolver(COMPILE_CONTEXT.securityContext) | safe }}' 
+        AND active = 'true'
+    data_source: default
+    extends: spark_recommendation
+    joins: []
