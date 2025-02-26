@@ -51,6 +51,23 @@ resource "aws_iam_policy" "sync_svc_cube_ecr_policy" {
           "ecr:UploadLayerPart"
         ],
         "Resource" : aws_ecr_repository.sync_svc_cube_repo.arn
+      },
+      {
+        "Sid" : "AllowTaskDefinitionUpdates",
+        "Effect" : "Allow",
+        "Action" : [
+          "ecs:DescribeTaskDefinition",
+          "ecs:RegisterTaskDefinition"
+        ],
+        "Resource" : "*"
+      },
+      {
+        "Sid" : "AllowPassRoleToTask",
+        "Effect" : "Allow",
+        "Action" : [
+          "iam:PassRole"
+        ],
+        "Resource" : [aws_iam_role.ecs_task_role.arn, aws_iam_role.ecs_task_execution_role.arn]
       }
     ]
   })
