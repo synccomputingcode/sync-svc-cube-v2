@@ -53,12 +53,13 @@ resource "aws_iam_policy" "sync_svc_cube_ecr_policy" {
         "Resource" : aws_ecr_repository.sync_svc_cube_repo.arn
       },
       {
-        "Sid" : "AllowTaskDefinitionUpdates",
+        "Sid" : "AllowEcsServiceDeploys",
         "Effect" : "Allow",
         "Action" : [
           "ecs:DescribeTaskDefinition",
           "ecs:RegisterTaskDefinition",
-          "ecs:DescribeServices"
+          "ecs:DescribeServices",
+          "ecs:UpdateService"
         ],
         "Resource" : "*"
       },
