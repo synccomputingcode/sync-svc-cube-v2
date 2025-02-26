@@ -41,7 +41,7 @@ jobs:
         with:
           task-definition-family: cube_api
           container-name: cube-api
-          image: sync-svc-cube:${{ github.sha }}
+          image: ${{ steps.login-ecr.outputs.registry }}/sync-svc-cube:${{ github.sha }}
 
       - name: Update cube-refresh-worker Task Definition with latest image
         id: cube-refresh-worker-task-def
@@ -49,7 +49,7 @@ jobs:
         with:
           task-definition-family: cube_refresh_worker
           container-name: cube-refresh-worker
-          image: sync-svc-cube:${{ github.sha }}
+          image: ${{ steps.login-ecr.outputs.registry }}/sync-svc-cube:${{ github.sha }}
 
       - name: Deploy cube-api task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2.3.0
