@@ -58,6 +58,62 @@ variable "cubestore_image" {
   default     = "cubejs/cubestore"
 }
 
+variable "cube_api_resources" {
+  type = object({
+    cpu                  = string
+    memory               = string
+    desired_worker_count = number
+  })
+
+  default = {
+    cpu                  = "2048"
+    memory               = "4096"
+    desired_worker_count = 2
+  }
+}
+
+variable "cube_refresh_worker_resources" {
+  type = object({
+    cpu                  = string
+    memory               = string
+    desired_worker_count = number
+  })
+
+  default = {
+    cpu                  = "2048"
+    memory               = "4096"
+    desired_worker_count = 1
+  }
+}
+
+
+variable "cubestore_router_resources" {
+  type = object({
+    cpu                  = string
+    memory               = string
+    desired_worker_count = number
+  })
+
+  default = {
+    cpu    = "4096"
+    memory = "8192"
+  }
+}
+
+variable "cubestore_worker_resources" {
+  type = object({
+    cpu                    = string
+    memory                 = string
+    cubestore_worker_count = number
+  })
+
+  default = {
+    cpu                    = "4096"
+    memory                 = "8192"
+    cubestore_worker_count = 2
+  }
+}
+
 variable "cube_shared_env" {
   type = list(object({
     name  = string
@@ -74,11 +130,6 @@ variable "cube_shared_secrets" {
   }))
   description = "Shared environment secrets for cube api and refresh workers."
   default     = []
-}
-
-
-variable "cubestore_worker_count" {
-  default = 2
 }
 
 variable "cube_api_domain_name" {

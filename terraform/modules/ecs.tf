@@ -122,7 +122,7 @@ locals {
   cubestore_worker_port       = 80
   cubestore_worker_port_name  = "cubestore-worker-port"
   cubestore_worker_dns_prefix = "cubestore-worker"
-  cubestore_task_dns_names    = join(",", [for i in range(var.cubestore_worker_count) : "${local.cubestore_worker_dns_prefix}-${i}:${local.cubestore_worker_port}"])
+  cubestore_task_dns_names    = join(",", [for i in range(var.cubestore_worker_resources.cubestore_worker_count) : "${local.cubestore_worker_dns_prefix}-${i}:${local.cubestore_worker_port}"])
 
   cubestore_router_dns_name  = "cubestore-router"
   cubestore_router_port      = 80
@@ -145,8 +145,8 @@ resource "aws_ecs_task_definition" "cube_api" {
     {
       name      = "cube-api"
       image     = "${aws_ecr_repository.sync_svc_cube_repo.repository_url}:latest"
-      cpu       = 256
-      memory    = 512
+      cpu       = var.cube_api_resources.cpu
+      memory    = var.cube_api_resources.memory
       essential = true
       logConfiguration = {
         "logDriver" : "awslogs",
@@ -198,15 +198,15 @@ resource "aws_ecs_task_definition" "cube_api" {
   task_role_arn            = aws_iam_role.ecs_task_role.arn
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"
-  memory                   = "512"
+  cpu                      = var.cube_api_resources.cpu
+  memory                   = var.cube_api_resources.memory
 }
 
 resource "aws_ecs_service" "cube_api" {
   name                   = "cube_api"
   cluster                = aws_ecs_cluster.main.id
   task_definition        = aws_ecs_task_definition.cube_api.arn
-  desired_count          = 1
+  desired_count          = var.cube_api_resources.desired_worker_count
   launch_type            = "FARGATE"
   wait_for_steady_state  = true
   enable_execute_command = true
@@ -237,8 +237,8 @@ resource "aws_ecs_task_definition" "cube_refresh_worker" {
     {
       name      = "cube-refresh-worker"
       image     = "${aws_ecr_repository.sync_svc_cube_repo.repository_url}:latest"
-      cpu       = 256
-      memory    = 512
+      cpu       = var.cube_refresh_worker_resources.cpu
+      memory    = var.cube_refresh_worker_resources.memory
       essential = true
       logConfiguration = {
         "logDriver" : "awslogs",
@@ -284,15 +284,15 @@ resource "aws_ecs_task_definition" "cube_refresh_worker" {
   task_role_arn            = aws_iam_role.ecs_task_role.arn
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"
-  memory                   = "512"
+  cpu                      = var.cube_refresh_worker_resources.cpu
+  memory                   = var.cube_refresh_worker_resources.memory
 }
 
 resource "aws_ecs_service" "cube_refresh_worker" {
   name                   = "cube_refresh_worker"
   cluster                = aws_ecs_cluster.main.id
   task_definition        = aws_ecs_task_definition.cube_refresh_worker.arn
-  desired_count          = 1
+  desired_count          = var.cube_refresh_worker_resources.desired_worker_count
   launch_type            = "FARGATE"
   wait_for_steady_state  = true
   enable_execute_command = true
@@ -379,8 +379,8 @@ resource "aws_ecs_task_definition" "cubestore_router" {
     {
       name      = "cubestore-router"
       image     = "${var.cubestore_image}"
-      cpu       = 256
-      memory    = 512
+      cpu       = var.cubestore_router_resources.cpu
+      memory    = var.cubestore_router_resources.memory
       essential = true
       logConfiguration = {
         "logDriver" : "awslogs",
@@ -439,17 +439,17 @@ resource "aws_ecs_task_definition" "cubestore_router" {
   task_role_arn            = aws_iam_role.ecs_task_role.arn
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"
-  memory                   = "512"
+  cpu                      = var.cubestore_router_resources.cpu
+  memory                   = var.cubestore_router_resources.memory
 }
 
 resource "aws_ecs_service" "cubestore" {
-  count = var.cubestore_worker_count
+  count = var.cubestore_worker_resources.cubestore_worker_count
 
   name                   = "cubestore_${count.index}"
   cluster                = aws_ecs_cluster.main.id
   task_definition        = aws_ecs_task_definition.cubestore[count.index].arn
-  desired_count          = 1
+  desired_count          = var.cubestore_worker_resources.cubestore_worker_count
   launch_type            = "FARGATE"
   wait_for_steady_state  = true
   enable_execute_command = true
@@ -487,22 +487,22 @@ resource "aws_ecs_service" "cubestore" {
 }
 
 resource "aws_ecs_task_definition" "cubestore" {
-  count = var.cubestore_worker_count
+  count = var.cubestore_worker_resources.cubestore_worker_count
 
   family                   = "cubestore-${count.index}"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   task_role_arn            = aws_iam_role.ecs_task_role.arn
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"
-  memory                   = "512"
+  cpu                      = var.cubestore_worker_resources.cpu
+  memory                   = var.cubestore_worker_resources.memory
 
   container_definitions = jsonencode([
     {
       name      = "cubestore"
       image     = "${var.cubestore_image}"
-      cpu       = 256
-      memory    = 512
+      cpu       = var.cubestore_worker_resources.cpu
+      memory    = var.cubestore_worker_resources.memory
       essential = true
       logConfiguration = {
         "logDriver" : "awslogs",
