@@ -52,6 +52,31 @@ resource "null_resource" "validate_vpc" {
   }
 }
 
+variable "cubestore_image" {
+  type        = string
+  description = "Image for cube store and cube store router"
+  default     = "cubejs/cubestore"
+}
+
+variable "cube_shared_env" {
+  type = list(object({
+    name  = string
+    value = string
+  }))
+  description = "Shared environment variables for cube api and refresh workers."
+  default     = []
+}
+
+variable "cube_shared_secrets" {
+  type = list(object({
+    name      = string
+    valueFrom = string
+  }))
+  description = "Shared environment secrets for cube api and refresh workers."
+  default     = []
+}
+
+
 variable "cubestore_worker_count" {
   default = 2
 }

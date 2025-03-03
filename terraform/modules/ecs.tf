@@ -19,6 +19,23 @@ resource "aws_ecs_cluster_capacity_providers" "fargate" {
   }
 }
 
+data "aws_secretsmanager_secret" "secrets" {
+  for_each = toset(var.cube_shared_secrets)
+  name     = each.valueFrom
+}
+
+locals {
+  secret_arns = [for s in data.aws_secretsmanager_secret.secrets : s.arn]
+}
+
+
+data "aws_iam_policy_document" "ecs_task_execution_role" {
+  statement {
+    actions   = ["secretsmanager:GetSecretValue"]
+    resources = local.secret_arns
+  }
+}
+
 resource "aws_iam_role" "ecs_task_execution_role" {
   name = "${var.cluster_prefix}_ecs_task_execution_role"
 
@@ -101,9 +118,82 @@ resource "aws_iam_role_policy_attachment" "ecs_task_role_attach" {
   policy_arn = aws_iam_policy.ecs_task_ssm_policy.arn
 }
 
+locals {
+  cubestore_worker_port       = 80
+  cubestore_worker_port_name  = "cubestore-worker-port"
+  cubestore_worker_dns_prefix = "cubestore-worker"
+  cubestore_task_dns_names    = join(",", [for i in range(var.cubestore_worker_count) : "${local.cubestore_worker_dns_prefix}-${i}:${local.cubestore_worker_port}"])
+
+  cubestore_router_dns_name  = "cubestore-router"
+  cubestore_router_port      = 80
+  cubestore_router_port_name = "cubestore-router-port"
+
+  cubestore_router_http_dns_name  = "cubestore-router-http"
+  cubestore_router_http_port_name = "cubestore-router-http-port"
+  cubestore_router_http_port      = 3030
+
+  cubestore_router_status_dns_name  = "cubestore-router-status"
+  cubestore_router_status_port_name = "cubestore-router-status-port"
+  cubestore_router_status_port      = 3031
+
+  cube_api_port = 80
+}
+
 resource "aws_ecs_task_definition" "cube_api" {
-  family                   = "cube_api"
-  container_definitions    = local.cube_api_container_definitions
+  family = "cube_api"
+  container_definitions = jsonencode([
+    {
+      name      = "cube-api"
+      image     = "${aws_ecr_repository.sync_svc_cube_repo.repository_url}:latest"
+      cpu       = 256
+      memory    = 512
+      essential = true
+      logConfiguration = {
+        "logDriver" : "awslogs",
+        "options" : {
+          "awslogs-group" : aws_cloudwatch_log_group.main.name,
+          "awslogs-region" : "us-east-1",
+          "awslogs-stream-prefix" : "ecs"
+        }
+      }
+      healthCheck = {
+        command     = ["CMD-SHELL", "curl -f http://localhost:${local.cube_api_port}/readyz || exit 1"]
+        interval    = 30
+        retries     = 3
+        startPeriod = 60 # Grace period before starting checks (in seconds)
+        timeout     = 5
+      }
+      portMappings = [
+        {
+          containerPort = local.cube_api_port,
+          hostPort      = local.cube_api_port,
+          protocol      = "tcp",
+          name          = "cube-api-port"
+        },
+      ],
+      environment = concat(var.cube_shared_env,
+        [
+          {
+            name  = "CUBEJS_REFRESH_WORKER"
+            value = "false"
+          },
+          {
+            name  = "PORT"
+            value = local.cube_api_port
+          },
+          {
+            name  = "CUBEJS_CUBESTORE_HOST"
+            value = local.cubestore_router_http_dns_name
+          },
+          {
+            name  = "CUBEJS_CUBESTORE_PORT"
+            value = local.cubestore_router_http_port
+          }
+        ]
+      ),
+      secrets = var.cube_shared_secrets
+    }
+  ])
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   task_role_arn            = aws_iam_role.ecs_task_role.arn
   network_mode             = "awsvpc"
@@ -131,7 +221,7 @@ resource "aws_ecs_service" "cube_api" {
 
   service_connect_configuration {
     enabled   = true
-    namespace = aws_service_discovery_http_namespace.cubestore.arn
+    namespace = aws_service_discovery_http_namespace.cube.arn
   }
 
   load_balancer {
@@ -142,8 +232,54 @@ resource "aws_ecs_service" "cube_api" {
 }
 
 resource "aws_ecs_task_definition" "cube_refresh_worker" {
-  family                   = "cube_refresh_worker"
-  container_definitions    = local.cube_refresh_worker_container_definitions
+  family = "cube_refresh_worker"
+  container_definitions = jsonencode([
+    {
+      name      = "cube-refresh-worker"
+      image     = "${aws_ecr_repository.sync_svc_cube_repo.repository_url}:latest"
+      cpu       = 256
+      memory    = 512
+      essential = true
+      logConfiguration = {
+        "logDriver" : "awslogs",
+        "options" : {
+          "awslogs-group" : aws_cloudwatch_log_group.main.name,
+          "awslogs-region" : "us-east-1",
+          "awslogs-stream-prefix" : "ecs"
+        }
+      }
+      healthCheck = {
+        command     = ["CMD-SHELL", "curl -f http://localhost:80/readyz || exit 1"]
+        interval    = 30
+        retries     = 3
+        startPeriod = 60 # Grace period before starting checks (in seconds)
+        timeout     = 5
+      }
+      portMappings = [
+        {
+          containerPort = 80,
+          hostPort      = 80,
+          protocol      = "tcp",
+          name          = "cube-refresh-worker-port"
+        },
+      ],
+      environment = concat(var.cube_shared_env,
+        [{
+          name  = "CUBEJS_REFRESH_WORKER"
+          value = "true"
+          },
+          {
+            name  = "CUBEJS_CUBESTORE_HOST"
+            value = local.cubestore_router_http_dns_name
+          },
+          {
+            name  = "CUBEJS_CUBESTORE_PORT"
+            value = local.cubestore_router_http_port
+        }]
+      ),
+      secrets = var.cube_shared_secrets
+    }
+  ])
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   task_role_arn            = aws_iam_role.ecs_task_role.arn
   network_mode             = "awsvpc"
@@ -171,13 +307,13 @@ resource "aws_ecs_service" "cube_refresh_worker" {
 
   service_connect_configuration {
     enabled   = true
-    namespace = aws_service_discovery_http_namespace.cubestore.arn
+    namespace = aws_service_discovery_http_namespace.cube.arn
   }
 }
 
-resource "aws_service_discovery_http_namespace" "cubestore" {
-  name        = "${var.cluster_prefix}-cubestore.local"
-  description = "Service discovery namespace for cubestore workers and router"
+resource "aws_service_discovery_http_namespace" "cube" {
+  name        = "${var.cluster_prefix}-cube.local"
+  description = "Service discovery namespace to form a cube cluster"
 }
 
 resource "aws_ecs_service" "cubestore_router" {
@@ -199,7 +335,7 @@ resource "aws_ecs_service" "cubestore_router" {
 
   service_connect_configuration {
     enabled   = true
-    namespace = aws_service_discovery_http_namespace.cubestore.arn
+    namespace = aws_service_discovery_http_namespace.cube.arn
     log_configuration {
       log_driver = "awslogs"
       options = {
@@ -209,37 +345,96 @@ resource "aws_ecs_service" "cubestore_router" {
       }
     }
     service {
-      discovery_name = "cubestore-router"
-      port_name      = "cubestore-router-port"
+      discovery_name = local.cubestore_router_dns_name
+      port_name      = local.cubestore_router_port_name
       client_alias {
-        port     = 80
-        dns_name = "cubestore-router"
+        port     = local.cubestore_router_port
+        dns_name = local.cubestore_router_dns_name
       }
     }
 
     service {
-      discovery_name = "cubestore-router-status"
-      port_name      = "cubestore-router-status-port"
+      discovery_name = local.cubestore_router_status_dns_name
+      port_name      = local.cubestore_router_status_port_name
       client_alias {
-        port     = 3031
-        dns_name = "cubestore-router-status"
+        port     = local.cubestore_router_status_port
+        dns_name = local.cubestore_router_status_dns_name
       }
     }
 
     service {
-      discovery_name = "cubestore-router-http"
-      port_name      = "cubestore-router-http-port"
+      discovery_name = local.cubestore_router_http_dns_name
+      port_name      = local.cubestore_router_http_port_name
       client_alias {
-        port     = 3030
-        dns_name = "cubestore-router-http"
+        port     = local.cubestore_router_http_port
+        dns_name = local.cubestore_router_http_dns_name
       }
     }
   }
 }
 
 resource "aws_ecs_task_definition" "cubestore_router" {
-  family                   = "cubestore_router"
-  container_definitions    = local.cubestore_router_container_definitions
+  family = "cubestore_router"
+  container_definitions = jsonencode([
+    {
+      name      = "cubestore-router"
+      image     = "${var.cubestore_image}"
+      cpu       = 256
+      memory    = 512
+      essential = true
+      logConfiguration = {
+        "logDriver" : "awslogs",
+        "options" : {
+          "awslogs-group" : aws_cloudwatch_log_group.main.name,
+          "awslogs-region" : "us-east-1",
+          "awslogs-stream-prefix" : "ecs"
+        }
+      }
+      healthCheck = {
+        command     = ["CMD-SHELL", "curl -f http://localhost:${local.cubestore_router_status_port}/readyz || exit 1"]
+        interval    = 30
+        retries     = 3
+        startPeriod = 60 # Grace period before starting checks (in seconds)
+        timeout     = 5
+      }
+      portMappings = [
+        {
+          containerPort = local.cubestore_router_port,
+          hostPort      = local.cubestore_router_port,
+          protocol      = "tcp",
+          name          = local.cubestore_router_port_name
+        },
+        {
+          containerPort = local.cubestore_router_http_port,
+          hostPort      = local.cubestore_router_http_port,
+          protocol      = "tcp",
+          name          = local.cubestore_router_http_port_name
+        },
+        {
+          containerPort = local.cubestore_router_status_port,
+          hostPort      = local.cubestore_router_status_port,
+          protocol      = "tcp",
+          name          = local.cubestore_router_status_port_name
+        }
+      ],
+      environment = [{
+        name  = "CUBESTORE_SERVER_NAME"
+        value = "${local.cubestore_router_dns_name}:${local.cubestore_router_port}"
+        },
+        {
+          name  = "CUBESTORE_META_PORT"
+          value = local.cubestore_router_port
+        },
+        {
+          name  = "CUBESTORE_WORKERS"
+          value = "${local.cubestore_task_dns_names}"
+        },
+        {
+          name  = "CUBESTORE_REMOTE_DIR"
+          value = "/cube/data"
+      }]
+    },
+  ])
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   task_role_arn            = aws_iam_role.ecs_task_role.arn
   network_mode             = "awsvpc"
@@ -271,7 +466,7 @@ resource "aws_ecs_service" "cubestore" {
 
   service_connect_configuration {
     enabled   = true
-    namespace = aws_service_discovery_http_namespace.cubestore.arn
+    namespace = aws_service_discovery_http_namespace.cube.arn
     log_configuration {
       log_driver = "awslogs"
       options = {
@@ -281,13 +476,79 @@ resource "aws_ecs_service" "cubestore" {
       }
     }
     service {
-      discovery_name = "cubestore-worker-${count.index}"
-      port_name      = "cubestore-worker-port"
+      discovery_name = "${local.cubestore_worker_dns_prefix}-${count.index}"
+      port_name      = local.cubestore_worker_port_name
       client_alias {
-        port     = 80
-        dns_name = "cubestore-worker-${count.index}"
+        port     = local.cubestore_worker_port
+        dns_name = "${local.cubestore_worker_dns_prefix}-${count.index}"
       }
     }
   }
+}
+
+resource "aws_ecs_task_definition" "cubestore" {
+  count = var.cubestore_worker_count
+
+  family                   = "cubestore-${count.index}"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_role.arn
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+
+  container_definitions = jsonencode([
+    {
+      name      = "cubestore"
+      image     = "${var.cubestore_image}"
+      cpu       = 256
+      memory    = 512
+      essential = true
+      logConfiguration = {
+        "logDriver" : "awslogs",
+        "options" : {
+          "awslogs-group" : aws_cloudwatch_log_group.main.name,
+          "awslogs-region" : "us-east-1",
+          "awslogs-stream-prefix" : "ecs"
+        }
+      }
+      healthCheck = {
+        command     = ["CMD-SHELL", "curl -f http://localhost:3031/readyz || exit 1"]
+        interval    = 30
+        retries     = 3
+        startPeriod = 60 # Grace period before starting checks (in seconds)
+        timeout     = 5
+      }
+      portMappings = [
+        {
+          containerPort = local.cubestore_worker_port,
+          hostPort      = local.cubestore_worker_port,
+          protocol      = "tcp",
+          name          = local.cubestore_worker_port_name
+        }
+      ],
+      environment = [{
+        name  = "CUBESTORE_SERVER_NAME"
+        value = "${local.cubestore_worker_dns_prefix}-${count.index}:${local.cubestore_worker_port}"
+        },
+        {
+          name  = "CUBESTORE_WORKER_PORT"
+          value = "${local.cubestore_worker_port}"
+        },
+        {
+          name  = "CUBESTORE_META_ADDR"
+          value = "${local.cubestore_router_dns_name}:${local.cubestore_router_port}"
+        },
+        {
+          name  = "CUBESTORE_WORKERS"
+          value = "${local.cubestore_task_dns_names}"
+        },
+        {
+          name  = "CUBESTORE_REMOTE_DIR"
+          value = "/cube/data"
+      }]
+    }
+  ])
+
 }
 
