@@ -3,50 +3,29 @@ variable "cluster_prefix" {
 }
 
 variable "vpc" {
-  type = object({
-    id              = string
-    public_subnets  = list(string)
-    private_subnets = list(string)
-  })
-}
-
-data "aws_vpc" "selected" {
-  id = var.vpc.id
-}
-
-data "aws_nat_gateway" "selected" {
-  filter {
-    name   = "vpc-id"
-    values = [var.vpc.id]
-  }
-}
-
-data "aws_internet_gateway" "selected" {
-  filter {
-    name   = "attachment.vpc-id"
-    values = [var.vpc.id]
-  }
+  description = "VPC to deploy cube cluster within"
+  type        = any
 }
 
 resource "null_resource" "validate_vpc" {
   lifecycle {
     precondition {
-      condition     = data.aws_vpc.selected.enable_dns_support
+      condition     = var.vpc.enable_dns_support
       error_message = "The VPC must have enable_dns_support = true"
     }
 
     precondition {
-      condition     = data.aws_vpc.selected.enable_dns_hostnames
+      condition     = var.vpc.enable_dns_hostnames
       error_message = "The VPC must have enable_dns_hostnames = true"
     }
 
     precondition {
-      condition     = length(data.aws_nat_gateway.selected.ids) > 0
+      condition     = var.vpc.enable_nat_gateway
       error_message = "The VPC must have at least one NAT Gateway"
     }
 
     precondition {
-      condition     = length(data.aws_internet_gateway.selected.ids) > 0
+      condition     = var.vpc.create_igw
       error_message = "The VPC must have an Internet Gateway"
     }
   }
@@ -89,9 +68,8 @@ variable "cube_refresh_worker_resources" {
 
 variable "cubestore_router_resources" {
   type = object({
-    cpu                  = string
-    memory               = string
-    desired_worker_count = number
+    cpu    = string
+    memory = string
   })
 
   default = {

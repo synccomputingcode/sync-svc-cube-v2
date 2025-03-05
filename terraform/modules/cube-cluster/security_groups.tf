@@ -1,6 +1,6 @@
 resource "aws_security_group" "ecs_service" {
   name_prefix = "${var.cluster_prefix}-ecs-service-"
-  vpc_id      = data.aws_vpc.selected.id
+  vpc_id      = var.vpc.vpc_id
 
   ingress {
     from_port       = 0
@@ -30,7 +30,7 @@ data "aws_ec2_managed_prefix_list" "cloudfront" {
 
 resource "aws_security_group" "lb" {
   name_prefix = "${var.cluster_prefix}-lb-"
-  vpc_id      = data.aws_vpc.selected.id
+  vpc_id      = var.vpc.vpc_id
 
   ingress {
     from_port   = 80

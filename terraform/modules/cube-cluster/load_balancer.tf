@@ -1,16 +1,20 @@
+locals {
+  public_subnets = var.vpc.public_subnets
+}
+
 resource "aws_lb" "main" {
   name               = "${var.cluster_prefix}-cube-api-lb"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.lb.id]
-  subnets            = data.aws_vpc.selected.public_subnets
+  subnets            = local.public_subnets
 }
 
 resource "aws_lb_target_group" "main" {
   name                 = "${var.cluster_prefix}-cube-api-tg"
   port                 = 80
   protocol             = "HTTP"
-  vpc_id               = data.aws_vpc.selected.id
+  vpc_id               = var.vpc.vpc_id
   target_type          = "ip"
   deregistration_delay = 5
 

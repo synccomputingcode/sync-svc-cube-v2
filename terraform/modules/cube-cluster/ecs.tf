@@ -20,8 +20,8 @@ resource "aws_ecs_cluster_capacity_providers" "fargate" {
 }
 
 data "aws_secretsmanager_secret" "secrets" {
-  for_each = toset(var.cube_shared_secrets)
-  name     = each.valueFrom
+  for_each = { for idx, secret in var.cube_shared_secrets : idx => secret }
+  name     = each.value.valueFrom
 }
 
 locals {
@@ -137,6 +137,8 @@ locals {
   cubestore_router_status_port      = 3031
 
   cube_api_port = 80
+
+  private_subnets = var.vpc.private_subnets
 }
 
 resource "aws_ecs_task_definition" "cube_api" {
@@ -144,9 +146,9 @@ resource "aws_ecs_task_definition" "cube_api" {
   container_definitions = jsonencode([
     {
       name      = "cube-api"
-      image     = "${aws_ecr_repository.sync_svc_cube_repo.repository_url}:latest"
-      cpu       = var.cube_api_resources.cpu
-      memory    = var.cube_api_resources.memory
+      image     = "${aws_ecr_repository.cube_repo.repository_url}:latest"
+      cpu       = tonumber(var.cube_api_resources.cpu)
+      memory    = tonumber(var.cube_api_resources.memory)
       essential = true
       logConfiguration = {
         "logDriver" : "awslogs",
@@ -179,7 +181,7 @@ resource "aws_ecs_task_definition" "cube_api" {
           },
           {
             name  = "PORT"
-            value = local.cube_api_port
+            value = tostring(local.cube_api_port)
           },
           {
             name  = "CUBEJS_CUBESTORE_HOST"
@@ -187,7 +189,7 @@ resource "aws_ecs_task_definition" "cube_api" {
           },
           {
             name  = "CUBEJS_CUBESTORE_PORT"
-            value = local.cubestore_router_http_port
+            value = tostring(local.cubestore_router_http_port)
           }
         ]
       ),
@@ -215,7 +217,7 @@ resource "aws_ecs_service" "cube_api" {
   deployment_minimum_healthy_percent = 0
 
   network_configuration {
-    subnets         = data.aws_vpc.selected.private_subnets
+    subnets         = local.private_subnets
     security_groups = [aws_security_group.ecs_service.id]
   }
 
@@ -236,9 +238,9 @@ resource "aws_ecs_task_definition" "cube_refresh_worker" {
   container_definitions = jsonencode([
     {
       name      = "cube-refresh-worker"
-      image     = "${aws_ecr_repository.sync_svc_cube_repo.repository_url}:latest"
-      cpu       = var.cube_refresh_worker_resources.cpu
-      memory    = var.cube_refresh_worker_resources.memory
+      image     = "${aws_ecr_repository.cube_repo.repository_url}:latest"
+      cpu       = tonumber(var.cube_refresh_worker_resources.cpu)
+      memory    = tonumber(var.cube_refresh_worker_resources.memory)
       essential = true
       logConfiguration = {
         "logDriver" : "awslogs",
@@ -274,7 +276,7 @@ resource "aws_ecs_task_definition" "cube_refresh_worker" {
           },
           {
             name  = "CUBEJS_CUBESTORE_PORT"
-            value = local.cubestore_router_http_port
+            value = tostring(local.cubestore_router_http_port)
         }]
       ),
       secrets = var.cube_shared_secrets
@@ -301,7 +303,7 @@ resource "aws_ecs_service" "cube_refresh_worker" {
   deployment_minimum_healthy_percent = 0
 
   network_configuration {
-    subnets         = data.aws_vpc.selected.private_subnets
+    subnets         = local.private_subnets
     security_groups = [aws_security_group.ecs_service.id]
   }
 
@@ -329,7 +331,7 @@ resource "aws_ecs_service" "cubestore_router" {
   deployment_minimum_healthy_percent = 0
 
   network_configuration {
-    subnets         = data.aws_vpc.selected.private_subnets
+    subnets         = local.private_subnets
     security_groups = [aws_security_group.ecs_service.id]
   }
 
@@ -379,8 +381,8 @@ resource "aws_ecs_task_definition" "cubestore_router" {
     {
       name      = "cubestore-router"
       image     = "${var.cubestore_image}"
-      cpu       = var.cubestore_router_resources.cpu
-      memory    = var.cubestore_router_resources.memory
+      cpu       = tonumber(var.cubestore_router_resources.cpu)
+      memory    = tonumber(var.cubestore_router_resources.memory)
       essential = true
       logConfiguration = {
         "logDriver" : "awslogs",
@@ -423,7 +425,7 @@ resource "aws_ecs_task_definition" "cubestore_router" {
         },
         {
           name  = "CUBESTORE_META_PORT"
-          value = local.cubestore_router_port
+          value = tostring(local.cubestore_router_port)
         },
         {
           name  = "CUBESTORE_WORKERS"
@@ -459,7 +461,7 @@ resource "aws_ecs_service" "cubestore" {
 
 
   network_configuration {
-    subnets          = data.aws_vpc.selected.private_subnets
+    subnets          = local.private_subnets
     security_groups  = [aws_security_group.ecs_service.id]
     assign_public_ip = true
   }
@@ -501,8 +503,8 @@ resource "aws_ecs_task_definition" "cubestore" {
     {
       name      = "cubestore"
       image     = "${var.cubestore_image}"
-      cpu       = var.cubestore_worker_resources.cpu
-      memory    = var.cubestore_worker_resources.memory
+      cpu       = tonumber(var.cubestore_worker_resources.cpu)
+      memory    = tonumber(var.cubestore_worker_resources.memory)
       essential = true
       logConfiguration = {
         "logDriver" : "awslogs",
@@ -533,7 +535,7 @@ resource "aws_ecs_task_definition" "cubestore" {
         },
         {
           name  = "CUBESTORE_WORKER_PORT"
-          value = "${local.cubestore_worker_port}"
+          value = tostring(local.cubestore_worker_port)
         },
         {
           name  = "CUBESTORE_META_ADDR"
