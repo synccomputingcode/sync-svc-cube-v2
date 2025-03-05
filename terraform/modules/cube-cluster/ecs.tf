@@ -271,6 +271,10 @@ resource "aws_ecs_task_definition" "cube_refresh_worker" {
           value = "true"
           },
           {
+            name  = "PORT"
+            value = "80"
+          },
+          {
             name  = "CUBEJS_CUBESTORE_HOST"
             value = local.cubestore_router_http_dns_name
           },
@@ -514,13 +518,14 @@ resource "aws_ecs_task_definition" "cubestore" {
           "awslogs-stream-prefix" : "ecs"
         }
       }
-      healthCheck = {
-        command     = ["CMD-SHELL", "curl -f http://localhost:3031/readyz || exit 1"]
-        interval    = 30
-        retries     = 3
-        startPeriod = 60 # Grace period before starting checks (in seconds)
-        timeout     = 5
-      }
+      # bring back when I figure out where to get a health check port
+      # healthCheck = {
+      #   command     = ["CMD-SHELL", "curl -f http://localhost:3031/readyz || exit 1"]
+      #   interval    = 30
+      #   retries     = 3
+      #   startPeriod = 60 # Grace period before starting checks (in seconds)
+      #   timeout     = 5
+      # }
       portMappings = [
         {
           containerPort = local.cubestore_worker_port,
