@@ -27,7 +27,7 @@ resource "aws_iam_policy" "cube_repo_ecr_policy" {
           "ecr:PutImage",
           "ecr:UploadLayerPart"
         ],
-        "Resource" : aws_ecr_repository.cube_repo.arn
+        "Resource" : [aws_ecr_repository.cube_repo.arn, aws_ecr_repository.cubestore_repo.arn]
       },
       {
         "Sid" : "AllowEcsServiceDeploys",

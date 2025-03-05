@@ -7,25 +7,43 @@ variable "vpc" {
   type        = any
 }
 
+data "aws_vpc" "selected" {
+  id = var.vpc.vpc_id
+}
+
+data "aws_nat_gateways" "selected" {
+  filter {
+    name   = "vpc-id"
+    values = [var.vpc.vpc_id]
+  }
+}
+
+data "aws_internet_gateway" "selected" {
+  filter {
+    name   = "attachment.vpc-id"
+    values = [var.vpc.vpc_id]
+  }
+}
+
 resource "null_resource" "validate_vpc" {
   lifecycle {
     precondition {
-      condition     = var.vpc.enable_dns_support
+      condition     = data.aws_vpc.selected.enable_dns_support
       error_message = "The VPC must have enable_dns_support = true"
     }
 
     precondition {
-      condition     = var.vpc.enable_dns_hostnames
+      condition     = data.aws_vpc.selected.enable_dns_hostnames
       error_message = "The VPC must have enable_dns_hostnames = true"
     }
 
     precondition {
-      condition     = var.vpc.enable_nat_gateway
+      condition     = length(data.aws_nat_gateways.selected.ids) > 0
       error_message = "The VPC must have at least one NAT Gateway"
     }
 
     precondition {
-      condition     = var.vpc.create_igw
+      condition     = can(data.aws_internet_gateway.selected.id)
       error_message = "The VPC must have an Internet Gateway"
     }
   }

@@ -380,7 +380,7 @@ resource "aws_ecs_task_definition" "cubestore_router" {
   container_definitions = jsonencode([
     {
       name      = "cubestore-router"
-      image     = "${var.cubestore_image}"
+      image     = "${aws_ecr_repository.cubestore_repo.repository_url}:8311306"
       cpu       = tonumber(var.cubestore_router_resources.cpu)
       memory    = tonumber(var.cubestore_router_resources.memory)
       essential = true
@@ -502,7 +502,7 @@ resource "aws_ecs_task_definition" "cubestore" {
   container_definitions = jsonencode([
     {
       name      = "cubestore"
-      image     = "${var.cubestore_image}"
+      image     = "${aws_ecr_repository.cubestore_repo.repository_url}:8311306"
       cpu       = tonumber(var.cubestore_worker_resources.cpu)
       memory    = tonumber(var.cubestore_worker_resources.memory)
       essential = true
