@@ -2,7 +2,7 @@ name: Deploy
 on:
   push:
     branches:
-      - main
+      - singhals/time-to-parameterize
 permissions:
   id-token: write # This is required for requesting tghe JWT
   contents: read # This is required for actions/checkout
