@@ -14,8 +14,8 @@ data "aws_cloudfront_origin_request_policy" "all_viewers" {
   name = "Managed-AllViewer"
 }
 
-resource "aws_cloudfront_distribution" "sync_svc_cube_cdn" {
-  aliases         = [local.domain_name, "www.${local.domain_name}"]
+resource "aws_cloudfront_distribution" "cube_cdn" {
+  aliases         = [var.cube_api_domain_name]
   comment         = "Cloudfront distribution for cube.dev api"
   price_class     = "PriceClass_100"
   is_ipv6_enabled = true
@@ -24,12 +24,6 @@ resource "aws_cloudfront_distribution" "sync_svc_cube_cdn" {
   origin {
     domain_name = local.api_domain_name
     origin_id   = local.api_domain_name
-
-    # vpc_origin_config {
-    #   vpc_origin_id            = aws_cloudfront_vpc_origin.alb.id
-    #   origin_keepalive_timeout = 5
-    #   origin_read_timeout      = 30
-    # }
 
     custom_origin_config {
       http_port                = 80

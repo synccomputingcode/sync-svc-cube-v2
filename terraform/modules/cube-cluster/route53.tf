@@ -1,7 +1,7 @@
 
 locals {
-  domain_name     = "cube-api.synccomputing.com"
-  api_domain_name = "internal-cube-api-lb.${local.domain_name}"
+  domain_name     = var.cube_api_domain_name
+  api_domain_name = "internal-${var.cluster_prefix}-cube-api-lb.${local.domain_name}"
 }
 
 resource "aws_route53_zone" "main" {
@@ -9,9 +9,8 @@ resource "aws_route53_zone" "main" {
 }
 
 resource "aws_acm_certificate" "main" {
-  domain_name               = local.domain_name
-  validation_method         = "DNS"
-  subject_alternative_names = ["www.${local.domain_name}"]
+  domain_name       = local.domain_name
+  validation_method = "DNS"
 
   lifecycle {
     create_before_destroy = true
@@ -76,19 +75,8 @@ resource "aws_route53_record" "main" {
   name    = local.domain_name
   type    = "A"
   alias {
-    name                   = aws_cloudfront_distribution.sync_svc_cube_cdn.domain_name
-    zone_id                = aws_cloudfront_distribution.sync_svc_cube_cdn.hosted_zone_id
-    evaluate_target_health = false
-  }
-}
-
-resource "aws_route53_record" "www" {
-  zone_id = aws_route53_zone.main.zone_id
-  name    = "www.${local.domain_name}"
-  type    = "A"
-  alias {
-    name                   = aws_cloudfront_distribution.sync_svc_cube_cdn.domain_name
-    zone_id                = aws_cloudfront_distribution.sync_svc_cube_cdn.hosted_zone_id
+    name                   = aws_cloudfront_distribution.cube_cdn.domain_name
+    zone_id                = aws_cloudfront_distribution.cube_cdn.hosted_zone_id
     evaluate_target_health = false
   }
 }

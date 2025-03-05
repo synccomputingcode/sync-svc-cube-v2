@@ -1,28 +1,5 @@
-resource "aws_iam_openid_connect_provider" "default" {
-  url = "https://token.actions.githubusercontent.com"
-
-  client_id_list = [
-    "sts.amazonaws.com",
-  ]
-
-  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
-}
-
-module "iam_github_oidc_role" {
-  source      = "terraform-aws-modules/iam/aws//modules/iam-github-oidc-role"
-  name        = "github_actions_role"
-  path        = "/system/"
-  description = "GitHub IAM role for GitHub actions"
-
-  subjects = ["synccomputingcode/sync-svc-cube-v2:*"]
-
-  policies = {
-    GitHubActionsPolicy = aws_iam_policy.sync_svc_cube_ecr_policy.arn
-  }
-}
-
-resource "aws_iam_policy" "sync_svc_cube_ecr_policy" {
-  name        = "sync_svc_cube_ecr_policy"
+resource "aws_iam_policy" "cube_repo_ecr_policy" {
+  name        = "${var.cluster_prefix}_cube_repo_ecr_policy"
   path        = "/system/"
   description = "Policy for github role to push/pull containers"
 
@@ -50,7 +27,7 @@ resource "aws_iam_policy" "sync_svc_cube_ecr_policy" {
           "ecr:PutImage",
           "ecr:UploadLayerPart"
         ],
-        "Resource" : aws_ecr_repository.sync_svc_cube_repo.arn
+        "Resource" : [aws_ecr_repository.cube_repo.arn, aws_ecr_repository.cubestore_repo.arn]
       },
       {
         "Sid" : "AllowEcsServiceDeploys",
@@ -73,4 +50,8 @@ resource "aws_iam_policy" "sync_svc_cube_ecr_policy" {
       }
     ]
   })
+}
+
+output "cube_repo_ecr_policy" {
+  value = aws_iam_policy.cube_repo_ecr_policy
 }
