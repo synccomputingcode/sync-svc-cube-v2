@@ -9,7 +9,7 @@ terraform {
 
   backend "s3" {
     bucket                  = "synccomputing-terraform-state"
-    key                     = "${var.env}/terraform.tfstate"
+    key                     = "sync-svc-cube/terraform.tfstate"
     region                  = "us-east-1"
     shared_credentials_file = "~/.aws/credentials"
   }
@@ -44,7 +44,7 @@ module "vpc" {
 module "cube_cluster" {
   source = "./modules/cube-cluster"
 
-  cluster_prefix       = "${var.env}-cube"
+  cluster_prefix       = "${var.env}-sync"
   vpc                  = module.vpc
   cube_api_domain_name = var.api_domain
   cube_shared_env      = var.cube_api_env_vars
