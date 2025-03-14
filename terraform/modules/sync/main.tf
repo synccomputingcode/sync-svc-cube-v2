@@ -1,30 +1,3 @@
-terraform {
-  required_providers {
-    aws = {
-      source = "hashicorp/aws"
-    }
-  }
-
-  required_version = ">= 1.2.0"
-
-  backend "s3" {
-    bucket                  = "synccomputing-terraform-state"
-    key                     = "sync-svc-cube/terraform.tfstate"
-    region                  = "us-east-1"
-    shared_credentials_file = "~/.aws/credentials"
-  }
-}
-
-provider "aws" {
-  region = "us-east-1"
-  default_tags {
-    tags = {
-      Terraform   = "true"
-      Environment = "${var.env}"
-    }
-  }
-}
-
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = ">=5.7.1"
@@ -42,7 +15,7 @@ module "vpc" {
 }
 
 module "cube_cluster" {
-  source = "./modules/cube-cluster"
+  source = "../cube-cluster"
 
   cluster_prefix       = "${var.env}-sync"
   vpc                  = module.vpc
