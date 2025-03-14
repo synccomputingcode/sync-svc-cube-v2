@@ -56,7 +56,7 @@ jobs:
         with:
           task-definition: ${{ steps.cube-api-task-def.outputs.task-definition }}
           service: cube_api
-          cluster: prod-sync_cluster
+          cluster: prod-sync-cluster
           wait-for-service-stability: true
 
       - name: Deploy cube-refresh-worker task definition
@@ -64,5 +64,5 @@ jobs:
         with:
           task-definition: ${{ steps.cube-refresh-worker-task-def.outputs.task-definition }}
           service: cube_refresh_worker
-          cluster: prod-sync_cluster
+          cluster: prod-sync-cluster
           wait-for-service-stability: true

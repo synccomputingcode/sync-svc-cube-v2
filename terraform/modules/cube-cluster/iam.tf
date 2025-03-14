@@ -1,5 +1,5 @@
 resource "aws_iam_policy" "cube_repo_ecr_policy" {
-  name        = "${var.cluster_prefix}_cube_repo_ecr_policy"
+  name        = "${var.cluster_prefix}-cube-repo-ecr-policy"
   path        = "/system/"
   description = "Policy for github role to push/pull containers"
 
