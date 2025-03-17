@@ -98,7 +98,7 @@ EOF
 }
 
 resource "aws_iam_policy" "ecs_task_execution_role_policy" {
-  name        = "ecs_task_execution_role_policy"
+  name        = "${replace(var.cluster_prefix, "-", "_")}_ecs_task_execution_role_policy"
   description = "Policy for ECS Task Execution Role to get secrets"
   policy      = data.aws_iam_policy_document.ecs_task_execution_role.json
 }
