@@ -3,7 +3,7 @@ name: Deploy
 on:
   push:
     branches:
-      - main
+      - singhals/github-action
   workflow_dispatch:
     inputs:
       environment:
