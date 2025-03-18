@@ -28,9 +28,6 @@ jobs:
           - environment: staging
             ECR_REPO: staging-sync-cube-ecr
             ECS_CLUSTER: staging-sync-cluster
-          - environment: production
-            ECR_REPO: production-sync-cube-ecr
-            ECS_CLUSTER: production-sync-cluster
     environment: ${{ matrix.environment }}
 
     steps:
