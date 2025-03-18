@@ -1,14 +1,38 @@
 name: Deploy
+
 on:
   push:
     branches:
-      - main
+      - singhals/github-action
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Select environment to deploy"
+        required: true
+        type: choice
+        options:
+          - production
+
 permissions:
   id-token: write # This is required for requesting tghe JWT
   contents: read # This is required for actions/checkout
 jobs:
   deploy-cube:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - environment: development
+            ECR_REPO: development-sync-cube-ecr
+            ECS_CLUSTER: development-sync-cluster
+            GITHUB_IAM_ROLE: arn:aws:iam::471881062455:role/system/development_github_actions_role
+          - environment: staging
+            ECR_REPO: staging-sync-cube-ecr
+            ECS_CLUSTER: staging-sync-cluster
+            GITHUB_IAM_ROLE: arn:aws:iam::471881062455:role/system/staging_github_actions_role
+    environment: ${{ matrix.environment }}
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -16,7 +40,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::471881062455:role/system/github_actions_role
+          role-to-assume: ${{ matrix.GITHUB_IAM_ROLE }}
           role-session-name: GitHub_to_AWS_sync_svc_cube
           aws-region: us-east-1
 
@@ -29,7 +53,7 @@ jobs:
       - name: Build, tag, and push cube api docker image to Amazon ECR
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          REPOSITORY: prod-sync-cube-ecr
+          REPOSITORY: ${{ matrix.ECR_REPO }}
           IMAGE_TAG: "${{ github.sha }}"
         run: |
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG -f docker/cube/Dockerfile .
@@ -41,7 +65,7 @@ jobs:
         with:
           task-definition-family: cube_api
           container-name: cube-api
-          image: ${{ steps.login-ecr.outputs.registry }}/prod-sync-cube-ecr:${{ github.sha }}
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ matrix.ECR_REPO }}:${{ github.sha }}
 
       - name: Update cube-refresh-worker Task Definition with latest image
         id: cube-refresh-worker-task-def
@@ -49,14 +73,14 @@ jobs:
         with:
           task-definition-family: cube_refresh_worker
           container-name: cube-refresh-worker
-          image: ${{ steps.login-ecr.outputs.registry }}/prod-sync-cube-ecr:${{ github.sha }}
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ matrix.ECR_REPO }}:${{ github.sha }}
 
       - name: Deploy cube-api task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2.3.0
         with:
           task-definition: ${{ steps.cube-api-task-def.outputs.task-definition }}
           service: cube_api
-          cluster: prod-sync-cluster
+          cluster: ${{ matrix.ECS_CLUSTER }}
           wait-for-service-stability: true
 
       - name: Deploy cube-refresh-worker task definition
@@ -64,5 +88,5 @@ jobs:
         with:
           task-definition: ${{ steps.cube-refresh-worker-task-def.outputs.task-definition }}
           service: cube_refresh_worker
-          cluster: prod-sync-cluster
+          cluster: ${{ matrix.ECS_CLUSTER }}
           wait-for-service-stability: true
