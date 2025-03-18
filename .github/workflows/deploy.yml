@@ -25,9 +25,11 @@ jobs:
           - environment: development
             ECR_REPO: development-sync-cube-ecr
             ECS_CLUSTER: development-sync-cluster
+            GITHUB_IAM_ROLE: arn:aws:iam::471881062455:role/system/development_github_actions_role
           - environment: staging
             ECR_REPO: staging-sync-cube-ecr
             ECS_CLUSTER: staging-sync-cluster
+            GITHUB_IAM_ROLE: arn:aws:iam::471881062455:role/system/staging_github_actions_role
     environment: ${{ matrix.environment }}
 
     steps:
@@ -37,7 +39,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::471881062455:role/system/github_actions_role
+          role-to-assume: ${{ matrix.GITHUB_IAM_ROLE }}
           role-session-name: GitHub_to_AWS_sync_svc_cube
           aws-region: us-east-1
 
